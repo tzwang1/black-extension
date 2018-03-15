@@ -23,6 +23,24 @@ bool UnitSquare::intersect(Ray3D& ray, const Matrix4x4& worldToModel,
 	// HINT: Remember to first transform the ray into object space  
 	// to simplify the intersection test.
 
+    // Since the normal of the unit square is (0, 0, 1), 
+    // we only need to consider the z coordinate.
+    double t =  -ray.origin[2] / ray.dir[2];
+
+    // Calculate the point where the ray intersects the xy-plane.
+    Point3D point = ray.origin + t*ray.dir;
+    Intersection intersection;
+
+    // Check if the point of intersection is within the unit square.
+    if(-0.5 <= point[0] <= 0.5 && -0.5 <= point[1] <= 0.5 && point[2] == 0){
+        intersection.point = point;
+        intersection.normal = Vector3D(0,0,1);
+        intersection.t_value = t;
+        intersection.none = false;
+    } else {
+        intersection.none = true;
+    }
+
 	return false;
 }
 
