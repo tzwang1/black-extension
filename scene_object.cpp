@@ -11,20 +11,6 @@
 #include "scene_object.h"
 #include <cmath>
 
-bool UnitSquare::intersect(Ray3D &ray, const Matrix4x4 &worldToModel,
-                           const Matrix4x4 &modelToWorld) {
-    // TODO: implement intersection code for UnitSquare, which is
-    // defined on the xy-plane, with vertices (0.5, 0.5, 0),
-    // (-0.5, 0.5, 0), (-0.5, -0.5, 0), (0.5, -0.5, 0), and normal
-    // (0, 0, 1).
-    //
-    // Your goal here is to fill ray.intersection with correct values
-    // should an intersection occur.  This includes intersection.point,
-    // intersection.normal, intersection.none, intersection.t_value.
-    //
-    // HINT: Remember to first transform the ray into object space
-    // to simplify the intersection test.
-
 bool solveQuadratic(float &a, float &b, float &c, float &x0, float &x1){
     float discr = b*b - 4*a*c;
     if(discr < 0){
@@ -175,9 +161,6 @@ void SceneNode::translate(Vector3D trans) {
 void SceneNode::scale(Point3D origin, double factor[3]) {
     Matrix4x4 scale;
 
-<<<<<<< HEAD
-
-=======
     scale[0][0] = factor[0];
     scale[0][3] = origin[0] - factor[0] * origin[0];
     scale[1][1] = factor[1];
@@ -193,4 +176,3 @@ void SceneNode::scale(Point3D origin, double factor[3]) {
     scale[2][3] = origin[2] - 1 / factor[2] * origin[2];
     this->invtrans = scale * this->invtrans;
 }
->>>>>>> b70b985184f743c4316b56ebf1fe92419f06b3b9
