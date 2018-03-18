@@ -9,6 +9,22 @@
 #include <cmath>
 #include "scene_object.h"
 
+bool solveQuadratic(float &a, float &b, float &c, float &x0, float &x1){
+    float discr = b*b - 4*a*c;
+    if(discr < 0){
+        return false;
+    } else if(discr == 0){
+        x0 = -b / (2*a);
+        x1 = -b / (2*a);
+    } else {
+        float val1 = (-b + sqrt(discr))/(2*a);
+        float val2 = (-b - sqrt(discr))/(2*a);
+    }
+
+    return true;
+}
+
+
 bool UnitSquare::intersect(Ray3D& ray, const Matrix4x4& worldToModel,
 		const Matrix4x4& modelToWorld) {
 	// TODO: implement intersection code for UnitSquare, which is
@@ -23,22 +39,29 @@ bool UnitSquare::intersect(Ray3D& ray, const Matrix4x4& worldToModel,
 	// HINT: Remember to first transform the ray into object space  
 	// to simplify the intersection test.
 
+    // Transform the ray (origin, direction) to object space
+    Point3D origin = worldToModel * ray.origin;
+    Vector3D direction = worldToModel * ray.dir;
     // Since the normal of the unit square is (0, 0, 1), 
     // we only need to consider the z coordinate.
-    double t =  -ray.origin[2] / ray.dir[2];
+    double t =  -origin[2] / direction[2];
+
+    // Invalid intersection
+    if(t < 0 || direction[2] == 0){
+        return false;
+    }
 
     // Calculate the point where the ray intersects the xy-plane.
-    Point3D point = ray.origin + t*ray.dir;
+    Point3D point = origin + t*direction;
+    Vector3D normal = Vector3D(0,0,1);
     Intersection intersection;
 
     // Check if the point of intersection is within the unit square.
-    if(-0.5 <= point[0] <= 0.5 && -0.5 <= point[1] <= 0.5 && point[2] == 0){
-        intersection.point = point;
-        intersection.normal = Vector3D(0,0,1);
+    if(-0.5 <= point[0] && point[0] <= 0.5 && -0.5 <= point[1] && point[1] <= 0.5){
+        intersection.point = modelToWorld * point;
+        intersection.normal = transNorm(worldToModel, normal);
         intersection.t_value = t;
-        intersection.none = false;
-    } else {
-        intersection.none = true;
+        return true;
     }
 
 	return false;
@@ -55,8 +78,28 @@ bool UnitSphere::intersect(Ray3D& ray, const Matrix4x4& worldToModel,
 	//
 	// HINT: Remember to first transform the ray into object space  
 	// to simplify the intersection test.
+    
+    // points for t if the ray intersects with the unit circle
+    float t0, t1;
+    // Transform the ray (origin, direction) to object space
+    Point3D origin = worldToModel * ray.origin;
+    Vector3D direction = worldToModel * ray.dir;
 
-	return false;
+    Vector3D center = origin - Point3D(0,0,0);
+    float a = direction.dot(direction);
+    float b = 2 * direction.dot(center);
+    float c = center.dot(center) - 1;
+
+    if(!solveQuadratic(a, b, c, t0, t1)){
+        return false;
+    }
+    
+    // Both t0 and t1 are negative
+    if(t0 < 0 && t1 < 0){
+        return false;
+    }
+
+	return true;
 }
 
 void SceneNode::rotate(char axis, double angle) {
@@ -132,5 +175,6 @@ void SceneNode::scale(Point3D origin, double factor[3] ) {
 	scale[2][3] = origin[2] - 1/factor[2] * origin[2];
 	this->invtrans = scale*this->invtrans; 
 }
+
 
 
