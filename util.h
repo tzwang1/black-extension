@@ -136,7 +136,7 @@ struct Material {
     Color diffuse;
     // Specular components for Phong shading.
     Color specular;
-    // Specular expoent.
+    // Specular exponent.
     double specular_exp;
 };
 
