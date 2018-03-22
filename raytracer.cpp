@@ -13,6 +13,8 @@
 #include <cstdlib>
 #include <iostream>
 
+const int MAX_REFLECT = 5;
+
 void Raytracer::traverseScene(Scene &scene, Ray3D &ray) {
     for (size_t i = 0; i < scene.size(); ++i) {
         SceneNode *node = scene[i];
@@ -46,7 +48,7 @@ void Raytracer::computeShading(Ray3D &ray, LightList &light_list) {
     }
 }
 
-Color Raytracer::shadeRay(Ray3D &ray, Scene &scene, LightList &light_list) {
+Color Raytracer::shadeRay(Ray3D &ray, Scene &scene, LightList &light_list, int num_reflect) {
     Color col(0.0, 0.0, 0.0);
     traverseScene(scene, ray);
 
@@ -59,6 +61,24 @@ Color Raytracer::shadeRay(Ray3D &ray, Scene &scene, LightList &light_list) {
 
     // You'll want to call shadeRay recursively (with a different ray,
     // of course) here to implement reflection/refraction effects.
+
+    // Reflect a ray MAX_REFLECT number of times
+    // TODO: Fix implementation 
+    if (!ray.intersection.none) {
+        if(num_reflect < MAX_REFLECT){
+            Intersection intersect = ray.intersection;
+            Vector3D normal = intersect.normal;
+
+            Vector3D light_ray = ray.dir;
+            Vector3D reflect_dir = 2.0 * normal.dot(light_ray) * normal - light_ray;
+            
+            ray.origin = intersect.point;
+            ray.dir = reflect_dir;
+            
+            num_reflect++;
+            col = col + shadeRay(ray, scene, light_list, num_reflect);
+        }
+    }
 
     return col;
 }
@@ -89,7 +109,7 @@ void Raytracer::render(Camera &camera, Scene &scene, LightList &light_list,
             ray.dir = viewToWorld * (imagePlane - origin);
             ray.dir.normalize();
 
-            Color col = shadeRay(ray, scene, light_list);
+            Color col = shadeRay(ray, scene, light_list, 0);
             image.setColorAtPixel(i, j, col);
         }
     }
