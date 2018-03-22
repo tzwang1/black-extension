@@ -36,11 +36,21 @@ int main(int argc, char *argv[]) {
     PointLight *pLight = new PointLight(Point3D(0, 0, 5), Color(0.9, 0.9, 0.9));
     light_list.push_back(pLight);
 
-    // Add a unit square into the scene with material mat.
+    // Add a unit sphere and square into the scene with material mat.
     SceneNode *sphere = new SceneNode(new UnitSphere(), &gold);
     scene.push_back(sphere);
     SceneNode *plane = new SceneNode(new UnitSquare(), &jade);
     scene.push_back(plane);
+
+    // Add three walls to demonstrate reflection.
+    SceneNode *wall1 = new SceneNode(new UnitSquare(), &jade);
+    scene.push_back(wall1);
+
+    // SceneNode *wall2 = new SceneNode(new UnitSquare(), &jade);
+    // scene.push_back(wall2);
+
+    // SceneNode *wall3 = new SceneNode(new UnitSquare(), &jade);
+    // scene.push_back(wall3);
 
     // Apply some transformations to the sphere and unit square.
     double factor1[3] = {1.0, 2.0, 1.0};
@@ -51,8 +61,15 @@ int main(int argc, char *argv[]) {
 
     double factor2[3] = {6.0, 6.0, 6.0};
     plane->translate(Vector3D(0, 0, -7));
-    plane->rotate('z', 45);
+    // plane->rotate('z', 45);
     plane->scale(Point3D(0, 0, 0), factor2);
+
+    // Apply some transformations to the three walls.
+    wall1->translate(Vector3D(0, 2, -5));
+    wall1->scale(Point3D(0, 0, 0), factor2);
+    wall1->rotate('x', 90);
+    // wall2->translate(Vector3D(3,0, -5));
+    // wall3->translate(Vector3D(5,5,-5));
 
     // Render the scene, feel free to make the image smaller for
     // testing purposes.
