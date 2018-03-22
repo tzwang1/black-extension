@@ -61,7 +61,7 @@ int main(int argc, char *argv[]) {
 
     double factor2[3] = {6.0, 6.0, 6.0};
     plane->translate(Vector3D(0, 0, -7));
-    // plane->rotate('z', 45);
+    plane->rotate('z', 45);
     plane->scale(Point3D(0, 0, 0), factor2);
 
     // Apply some transformations to the three walls.
