@@ -56,7 +56,7 @@ int main(int argc, char *argv[]) {
     double factor1[3] = {1.0, 2.0, 1.0};
     sphere->translate(Vector3D(0, 0, -5));
     sphere->rotate('x', -45);
-    sphere->rotate('z', 45);
+    // sphere->rotate('z', 45);
     sphere->scale(Point3D(0, 0, 0), factor1);
 
     double factor2[3] = {6.0, 6.0, 6.0};
@@ -78,14 +78,14 @@ int main(int argc, char *argv[]) {
     Image image1(width, height);
     raytracer.render(camera1, scene, light_list,
                      image1);             // render 3D scene to image
-    image1.flushPixelBuffer("phong1.bmp"); // save rendered image to file
+    image1.flushPixelBuffer("rec_ray1.bmp"); // save rendered image to file
 
     // Render it from a different point of view.
     Camera camera2(Point3D(4, 2, 1), Vector3D(-4, -2, -6), Vector3D(0, 1, 0),
                    60.0);
     Image image2(width, height);
     raytracer.render(camera2, scene, light_list, image2);
-    image2.flushPixelBuffer("phong2.bmp");
+    image2.flushPixelBuffer("rec_ray2.bmp");
 
     // Free memory
     for (size_t i = 0; i < scene.size(); ++i) {
