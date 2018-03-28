@@ -42,28 +42,30 @@ void Raytracer::computeShading(Ray3D &ray, LightList &light_list, Scene &scene) 
     for (size_t i = 0; i < light_list.size(); ++i) {
         LightSource *light = light_list[i];
 
+        light->shade(ray);
+
         // Each lightSource provides its own shading function.
         // Implement shadows here if needed.
         // Check if there is an object between the light source and the intersection point
-        Point3D intersect = ray.intersection.point;
-        Vector3D light_dir = light->get_position() - intersect;
-        light_dir.normalize();
-        bool blocked = false;
+        // Point3D intersect = ray.intersection.point;
+        // Vector3D light_dir = light->get_position() - intersect;
+        // light_dir.normalize();
+        // bool blocked = false;
 
-        Ray3D new_ray(intersect, light_dir);
-        for (size_t i = 0; i < scene.size(); ++i) {
-            SceneNode *node = scene[i];
+        // Ray3D new_ray(intersect, light_dir);
+        // for (size_t i = 0; i < scene.size(); ++i) {
+        //     SceneNode *node = scene[i];
 
-            if (node->obj->intersect(new_ray, node->worldToModel, node->modelToWorld)) {
-                blocked = true;
-                break;
-            }
-        }
-        if(blocked){
-            ray.col = Color(0.0, 0.0, 0.0);
-        } else {
-            light->shade(ray);
-        }
+        //     if (node->obj->intersect(new_ray, node->worldToModel, node->modelToWorld)) {
+        //         blocked = true;
+        //         break;
+        //     }
+        // }
+        // if(blocked){
+        //     ray.col = Color(0.0, 0.0, 0.0);
+        // } else {
+        //     light->shade(ray);
+        // }
     }
 }
 
@@ -87,16 +89,20 @@ Color Raytracer::shadeRay(Ray3D &ray, Scene &scene, LightList &light_list, int n
         if(num_reflect < MAX_REFLECT){
             Intersection intersect = ray.intersection;
             Vector3D normal = intersect.normal;
+            normal.normalize();
 
-            Vector3D light_ray = ray.dir;
-            Vector3D reflect_dir = -(2.0 * normal.dot(light_ray) * normal - light_ray);
+            Vector3D light_ray = -ray.dir;
+            Vector3D reflect_dir = 2.0 * normal.dot(light_ray) * normal - light_ray;
             reflect_dir.normalize();
             
             // Shoot a new ray from the intersect point in the direction of relfection
             Ray3D new_ray(intersect.point, reflect_dir);
             
             num_reflect++;
-            col = col + shadeRay(new_ray, scene, light_list, num_reflect);
+            new_ray.col = shadeRay(new_ray, scene, light_list, num_reflect);
+        
+            // col = col + shadeRay(new_ray, scene, light_list, num_reflect);
+            col = col + intersect.mat->specular * new_ray.col;
             
         }
     }

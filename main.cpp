@@ -43,8 +43,8 @@ int main(int argc, char *argv[]) {
     scene.push_back(plane);
 
     // Add three walls to demonstrate reflection.
-    SceneNode *wall1 = new SceneNode(new UnitSquare(), &jade);
-    scene.push_back(wall1);
+    // SceneNode *wall1 = new SceneNode(new UnitSquare(), &jade);
+    // scene.push_back(wall1);
 
     // SceneNode *wall2 = new SceneNode(new UnitSquare(), &jade);
     // scene.push_back(wall2);
@@ -65,9 +65,9 @@ int main(int argc, char *argv[]) {
     plane->scale(Point3D(0, 0, 0), factor2);
 
     // Apply some transformations to the three walls.
-    wall1->translate(Vector3D(0, 4.0, -5));
-    wall1->scale(Point3D(0, 0, 0), factor2);
-    wall1->rotate('x', 60);
+    // wall1->translate(Vector3D(0, 4.0, -5));
+    // wall1->scale(Point3D(0, 0, 0), factor2);
+    // wall1->rotate('x', 60);
     // wall2->translate(Vector3D(3,0, -5));
     // wall3->translate(Vector3D(5,5,-5));
 
