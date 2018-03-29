@@ -138,6 +138,8 @@ struct Material {
     Color specular;
     // Specular exponent.
     double specular_exp;
+    
+    bool reflective;
 };
 
 struct Intersection {
