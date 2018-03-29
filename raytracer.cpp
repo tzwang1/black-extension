@@ -14,6 +14,7 @@
 #include <iostream>
 
 const int MAX_REFLECT = 1;
+const double ERR = 1e-5;
 
 void Raytracer::traverseScene(Scene &scene, Ray3D &ray) {
     for (size_t i = 0; i < scene.size(); ++i) {
@@ -47,9 +48,9 @@ void Raytracer::computeShading(Ray3D &ray, LightList &light_list, Scene &scene) 
         // Each lightSource provides its own shading function.
         // Implement shadows here if needed.
         // Check if there is an object between the light source and the intersection point
-        Point3D intersect = ray.intersection.point + Vector3D(0.0001, 0.0001, 0.0001);
-        Vector3D light_dir = light->get_position() - intersect;
+        Vector3D light_dir = light->get_position() - ray.intersection.point;
         light_dir.normalize();
+        Point3D intersect = ray.intersection.point + (ERR*ray.intersection.normal) + (ERR*light_dir);
         bool blocked = false;
 
         Ray3D new_ray(intersect, light_dir);
@@ -95,8 +96,8 @@ Color Raytracer::shadeRay(Ray3D &ray, Scene &scene, LightList &light_list, int n
             Vector3D reflect_dir = 2.0 * normal.dot(light_ray) * normal - light_ray;
             reflect_dir.normalize();
             
-            Point3D new_intersect = intersect.point + Vector3D(0.0001, 0.0001, 0.0001);
-            // Shoot a new ray from the intersect point in the direction of relfection
+            Point3D new_intersect = intersect.point + (ERR * intersect.normal);
+            // Shoot a new ray from the intersect point in the direction of reflection
             Ray3D new_ray(new_intersect, reflect_dir);
             
             num_reflect++;
@@ -104,7 +105,6 @@ Color Raytracer::shadeRay(Ray3D &ray, Scene &scene, LightList &light_list, int n
         
             // col = col + shadeRay(new_ray, scene, light_list, num_reflect);
             col = col + intersect.mat->specular * new_ray.col;
-            
         }
     }
     col.clamp();

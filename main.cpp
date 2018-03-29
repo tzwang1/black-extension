@@ -68,8 +68,7 @@ int main(int argc, char *argv[]) {
     // Apply some transformations to the three walls.
     wall1->translate(Vector3D(0, 4.0, -5));
     wall1->scale(Point3D(0, 0, 0), factor2);
-    wall1->refect()
-    wall1->rotate('y', 60);
+    wall1->rotate('x', 45);
     // wall2->translate(Vector3D(3,0, -5));
     // wall3->translate(Vector3D(5,5,-5));
 
