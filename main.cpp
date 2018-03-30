@@ -7,6 +7,7 @@
 
 #include "raytracer.h"
 #include <cstdlib>
+#include "bmp_io.h"
 
 int main(int argc, char *argv[]) {
     // Build your scene and setup your camera here, by calling
@@ -26,9 +27,24 @@ int main(int argc, char *argv[]) {
         height = atoi(argv[2]);
     }
 
+    // bmp_read(char const *file_in_name, unsigned long int *width,
+    //           long int *height, unsigned char **rarray, unsigned char **garray,
+    //           unsigned char **barray)
+    // unsigned char **rarray;
+    // unsigned char **garray;
+    // unsigned char **barray;
+
+    // unsigned long floor_width = 50;
+    // long floor_height = 50;
+
+    // bool val = bmp_read("textures/horizontal.bmp", &floor_width, &floor_height, rarray, garray, barray);
+    // std::cout << rarray << std::endl;
+
     // Define materials for shading.
+    Material chrome(Color(0.25, 0.25,	0.25), Color(0.4, 0.4, 0.4),
+                  Color(0.774597, 0.774597, 0.774597), 76.8);
     Material gold(Color(0.3, 0.3, 0.3), Color(0.75164, 0.60648, 0.22648),
-                  Color(0.628281, 0.555802, 0.366065), 51.2);
+                   Color(0.628281, 0.555802, 0.366065), 51.2);
     Material jade(Color(0, 0, 0), Color(0.54, 0.89, 0.63),
                   Color(0.316228, 0.316228, 0.316228), 12.8);
 
@@ -37,10 +53,13 @@ int main(int argc, char *argv[]) {
     light_list.push_back(pLight);
 
     // Add a unit sphere and square into the scene with material mat.
-    SceneNode *sphere = new SceneNode(new UnitSphere(), &gold);
-    scene.push_back(sphere);
+    SceneNode *gold_sphere = new SceneNode(new UnitSphere(), &gold);
+    scene.push_back(gold_sphere);
     SceneNode *plane = new SceneNode(new UnitSquare(), &jade);
     scene.push_back(plane);
+
+    SceneNode *chrome_sphere = new SceneNode(new UnitSphere(), &chrome);
+    scene.push_back(chrome_sphere);
 
     // Add three walls to demonstrate reflection.
     SceneNode *wall1 = new SceneNode(new UnitSquare(), &jade);
@@ -53,20 +72,26 @@ int main(int argc, char *argv[]) {
     // SceneNode *wall3 = new SceneNode(new UnitSquare(), &jade);
     // scene.push_back(wall3);
 
-    // Apply some transformations to the sphere and unit square.
-    double factor1[3] = {1.0, 2.0, 1.0};
-    sphere->translate(Vector3D(0, 0, -5));
-    sphere->rotate('x', -45);
-    // sphere->rotate('z', 45);
-    sphere->scale(Point3D(0, 0, 0), factor1);
+    // Apply some transformations to the gold sphere
+    double factor1[3] = {1.0, 1.0, 1.0};
+    gold_sphere->translate(Vector3D(-3, 0, -5));
+    gold_sphere->rotate('x', -45);
+    gold_sphere->scale(Point3D(0, 0, 0), factor1);
+    gold_sphere->mat->reflective = false;
 
-    double factor2[3] = {6.0, 6.0, 6.0};
+    // Apply some transformations to the floor
+    double factor2[3] = {10.0, 10.0, 10.0};
     plane->translate(Vector3D(0, 0, -7));
-    // plane->rotate('z', 45);
     plane->scale(Point3D(0, 0, 0), factor2);
 
+    // Apply some transformations to the chrome sphere
+    double factor3[3] = {2.0, 2.0, 2.0};
+    chrome_sphere->translate(Vector3D(3, 0, -6));
+    chrome_sphere->scale(Point3D(0, 0, 0), factor3);
+    chrome_sphere->mat->reflective = false;
+
     // Apply some transformations to the three walls.
-    wall1->translate(Vector3D(0, 4.0, -5));
+    wall1->translate(Vector3D(0, 3, -7));
     wall1->scale(Point3D(0, 0, 0), factor2);
     wall1->rotate('x', 45);
     // wall2->translate(Vector3D(3,0, -5));
@@ -74,8 +99,8 @@ int main(int argc, char *argv[]) {
 
     // Render the scene, feel free to make the image smaller for
     // testing purposes.
-    Camera camera1(Point3D(0, 0, 1), Vector3D(0, 0, -1), Vector3D(0, 1, 0),
-                   60.0);
+    Camera camera1(Point3D(0, 0, 1), Vector3D(0, 0.2, -1), Vector3D(0, 1, 0),
+                   80.0);
     Image image1(width, height);
     raytracer.render(camera1, scene, light_list,
                      image1);             // render 3D scene to image
