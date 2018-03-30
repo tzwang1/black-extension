@@ -127,6 +127,12 @@ bool UnitSphere::intersect(Ray3D& ray, const Matrix4x4& worldToModel,
 	return false;
 }
 
+bool UnitCylinder::intersect(Ray3D& ray, const Matrix4x4& worldToModel,
+		const Matrix4x4& modelToWorld) {
+    
+    return false;
+}
+
 void SceneNode::rotate(char axis, double angle) {
     Matrix4x4 rotation;
     double toRadian = 2 * M_PI / 360.0;
