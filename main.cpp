@@ -58,8 +58,13 @@ int main(int argc, char *argv[]) {
     SceneNode *plane = new SceneNode(new UnitSquare(), &jade);
     scene.push_back(plane);
 
+    // Add a chrome sphere
     SceneNode *chrome_sphere = new SceneNode(new UnitSphere(), &chrome);
     scene.push_back(chrome_sphere);
+
+    // Add a cylinder
+    SceneNode *gold_cylinder = new SceneNode(new UnitCylinder(), &gold);
+    scene.push_back(gold_cylinder);
 
     // Add three walls to demonstrate reflection.
     SceneNode *wall1 = new SceneNode(new UnitSquare(), &jade);
@@ -89,6 +94,11 @@ int main(int argc, char *argv[]) {
     chrome_sphere->translate(Vector3D(3, 0, -6));
     chrome_sphere->scale(Point3D(0, 0, 0), factor3);
     chrome_sphere->mat->reflective = false;
+
+    // Apply some transformations to the gold cylinder
+    gold_cylinder->translate(Vector3D(0, 0, -2));
+    gold_cylinder->mat->reflective = false;
+    gold_cylinder->scale(Point3D(0, 0, 0), factor1);
 
     // Apply some transformations to the three walls.
     wall1->translate(Vector3D(0, 3, -7));
