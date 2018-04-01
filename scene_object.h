@@ -76,7 +76,7 @@ class UnitSphere : public SceneObject {
 };
 
 class UnitCylinder : public SceneObject {
-    public:
-      bool intersect(Ray3D &ray, const Matrix4x4 & worldToModel,
-                     const Matrix4x4 &modelToWorld);
+  public:
+    bool intersect(Ray3D &ray, const Matrix4x4 &worldToModel,
+                   const Matrix4x4 &modelToWorld);
 };
