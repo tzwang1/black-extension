@@ -119,26 +119,58 @@ void Raytracer::render(Camera &camera, Scene &scene, LightList &light_list,
     double factor = (double(image.height) / 2) / tan(camera.fov * M_PI / 360.0);
 
     viewToWorld = camera.initInvViewMatrix();
-
     // Construct a ray for each pixel.
+    Color color;
+    double samples = 5;
     for (int i = 0; i < image.height; i++) {
         for (int j = 0; j < image.width; j++) {
+            // Implement anti aliasing with samples*samples number
+            // of rays for each pixel
+            for (int k = 0; k < samples; k++) {
+                for(int l = 0; l < samples; l++) {
+                    double rand_width = ((double) rand() / RAND_MAX)/samples + l/samples + j;
+                    double rand_height = ((double) rand() / RAND_MAX)/samples + k/samples + i;
+
+                    Point3D origin(0, 0, 0);
+                    Point3D imagePlane;
+
+                    imagePlane[0] = (-double(image.width) / 2 + rand_width) / factor;
+                    imagePlane[1] = (-double(image.height) / 2 + rand_height) / factor;
+                    imagePlane[2] = -1;
+
+                    Ray3D ray;
+                    // TODO: Convert ray to world space
+                    ray.origin = viewToWorld * origin;
+                    ray.dir = viewToWorld * (imagePlane - origin);
+                    ray.dir.normalize();
+                    
+                    // Adding colors together
+                    color = color + shadeRay(ray, scene, light_list, 0);
+                }
+            }
+        
             // Sets up ray origin and direction in view space,
             // image plane is at z = -1.
-            Point3D origin(0, 0, 0);
-            Point3D imagePlane;
-            imagePlane[0] = (-double(image.width) / 2 + 0.5 + j) / factor;
-            imagePlane[1] = (-double(image.height) / 2 + 0.5 + i) / factor;
-            imagePlane[2] = -1;
+            // Point3D origin(0, 0, 0);
+            // Point3D imagePlane;
+            // imagePlane[0] = (-double(image.width) / 2 + 0.5 + j) / factor;
+            // imagePlane[1] = (-double(image.height) / 2 + 0.5 + i) / factor;
+            // imagePlane[2] = -1;
 
-            Ray3D ray;
-            // TODO: Convert ray to world space
-            ray.origin = viewToWorld * origin;
-            ray.dir = viewToWorld * (imagePlane - origin);
-            ray.dir.normalize();
+            // Ray3D ray;
+            // // TODO: Convert ray to world space
+            // ray.origin = viewToWorld * origin;
+            // ray.dir = viewToWorld * (imagePlane - origin);
+            // ray.dir.normalize();
 
-            Color col = shadeRay(ray, scene, light_list, 0);
-            image.setColorAtPixel(i, j, col);
+            // Color col = shadeRay(ray, scene, light_list, 0);
+            // image.setColorAtPixel(i, j, col);
+            // Averaging colors by total number of samples taken
+            color[0] = color[0] / (samples*samples);
+            color[1] = color[1] / (samples*samples);
+            color[2] = color[2] / (samples*samples);
+            color.clamp();
+            image.setColorAtPixel(i, j, color);
         }
     }
 }
