@@ -1,9 +1,11 @@
 /***********************************************************
         
+    Starter code for Assignment 3
 
-        Starter code for Assignment 3
+    Implements scene_object.h
 
-        Implements scene_object.h
+    Equations for primitives taken from
+    https://www.cl.cam.ac.uk/teaching/1999/AGraphHCI/SMAG/node2.html#SECTION00023200000000000000
 
 ***********************************************************/
 
@@ -11,9 +13,10 @@
 #include <cmath>
 
 // Checks whether values for a, b, and c solve a quadratic equation
-bool solveQuadratic(float &a, float &b, float &c, float &t) {
-    float discr = b * b - 4 * a * c;
-    float x0, x1;
+bool solveQuadratic(double &a, double &b, double &c, double &t) {
+    double discr = b * b - 4 * a * c;
+    double x0, x1;
+
     if (discr < 0) {
         return false;
     } else if (discr == 0) {
@@ -23,27 +26,31 @@ bool solveQuadratic(float &a, float &b, float &c, float &t) {
         x0 = (-b + sqrt(discr)) / (2 * a);
         x1 = (-b - sqrt(discr)) / (2 * a);
     }
-
-    t = fmin(x0, x1);
-    if (t < 0) {
+    // solve for parameter t by taking the minimum between the two solns
+    // return false if the t is negative
+    if (x0 < 0 && x1 < 0) {
         return false;
+    } else if (x0 < 0) {
+        t = x1;
+    } else if (x1 < 0) {
+        t = x0;
+    } else {
+        t = fmin(x0, x1);
     }
 
     return true;
 }
 
 // Sets values for an intersecting point
-Intersection set_intersect_values(float t, Vector3D normal, Point3D point,
-                                  const Matrix4x4 &worldToModel,
-                                  const Matrix4x4 &modelToWorld) {
-    Intersection intersection;
-    intersection.t_value = t;
-    intersection.point = modelToWorld * point;
+void set_intersect_values(Ray3D &ray, double t, Vector3D normal, Point3D point,
+                          const Matrix4x4 &worldToModel,
+                          const Matrix4x4 &modelToWorld) {
+    ray.intersection.t_value = t;
+    ray.intersection.point = modelToWorld * point;
     normal = transNorm(worldToModel, normal);
     normal.normalize();
-    intersection.normal = normal;
-    intersection.none = false;
-    return intersection;
+    ray.intersection.normal = normal;
+    ray.intersection.none = false;
 }
 
 bool UnitSquare::intersect(Ray3D &ray, const Matrix4x4 &worldToModel,
@@ -75,20 +82,14 @@ bool UnitSquare::intersect(Ray3D &ray, const Matrix4x4 &worldToModel,
 
     // Calculate the point where the ray intersects the xy-plane.
     Point3D point = origin + t * direction;
-    Vector3D normal = Vector3D(0, 0, 1);
+    Vector3D normal(0.0, 0.0, 1.0);
 
     // Check if the point of intersection is within the unit square.
     if ((-0.5 <= point[0]) && (point[0] <= 0.5) && (-0.5 <= point[1]) &&
         (point[1] <= 0.5)) {
         if (ray.intersection.none || t < ray.intersection.t_value) {
-            // ray.intersection.point = modelToWorld * point;
-            // normal = transNorm(worldToModel, normal);
-            // normal.normalize();
-            // ray.intersection.normal = normal;
-            // ray.intersection.t_value = t;
-            // ray.intersection.none = false;
-            ray.intersection = set_intersect_values(t, normal, point,
-                                                    worldToModel, modelToWorld);
+            set_intersect_values(ray, t, normal, point, worldToModel,
+                                 modelToWorld);
             return true;
         }
     }
@@ -108,16 +109,16 @@ bool UnitSphere::intersect(Ray3D &ray, const Matrix4x4 &worldToModel,
     // HINT: Remember to first transform the ray into object space
     // to simplify the intersection test.
 
-    // coordinates for t if the ray intersects with the unit circle
-    float t;
+    // t is the parameter for the point that intersects the sphere
+    double t;
     // Transform the ray (origin, direction) to object space
     Point3D origin = worldToModel * ray.origin;
     Vector3D direction = worldToModel * ray.dir;
 
     Vector3D center = origin - Point3D(0, 0, 0);
-    float a = direction.dot(direction);
-    float b = 2 * direction.dot(center);
-    float c = center.dot(center) - 1;
+    double a = direction.dot(direction);
+    double b = 2 * direction.dot(center);
+    double c = center.dot(center) - 1;
 
     if (!solveQuadratic(a, b, c, t)) {
         return false;
@@ -130,21 +131,14 @@ bool UnitSphere::intersect(Ray3D &ray, const Matrix4x4 &worldToModel,
     normal.normalize();
 
     if (ray.intersection.none || t < ray.intersection.t_value) {
-        // ray.intersection.t_value = t;
-        // ray.intersection.point = modelToWorld * point;
-        // normal = transNorm(worldToModel, normal);
-        // normal.normalize();
-        // ray.intersection.normal = normal;
-        // ray.intersection.none = false;
-        ray.intersection =
-            set_intersect_values(t, normal, point, worldToModel, modelToWorld);
+        set_intersect_values(ray, t, normal, point, worldToModel, modelToWorld);
         return true;
     }
 
     return false;
 }
 
-bool intersects_top_or_bot(float t, Point3D origin, Vector3D direction,
+bool intersects_top_or_bot(double t, Point3D origin, Vector3D direction,
                            Intersection intersection) {
     Point3D point = origin + t * direction;
     if (point[0] * point[0] + point[2] * point[2] < 1 && t > 0 &&
@@ -157,54 +151,98 @@ bool intersects_top_or_bot(float t, Point3D origin, Vector3D direction,
 bool UnitCylinder::intersect(Ray3D &ray, const Matrix4x4 &worldToModel,
                              const Matrix4x4 &modelToWorld) {
 
-    // coordinates for t if the ray intersects with the unit circle
-    float t;
-
-    // Transform the ray (origin, direction) to object space
+    // Setup new ray and transform to model space
     Point3D origin = worldToModel * ray.origin;
     Vector3D direction = worldToModel * ray.dir;
 
-    float a = direction[0] * direction[0] + direction[2] * direction[2];
-    float b = direction[0] * origin[0] + direction[2] * origin[2];
-    float c = origin[0] * origin[0] + origin[2] * origin[2] - 1;
+    // Setup
+    Point3D cylinderOrigin(0, 0, 0);
+    Vector3D normal;
+    float e = 0.0001;
 
-    if (!solveQuadratic(a, b, c, t)) {
+    // Set up for computing the intersect, zmin and zmax are for the bottom and
+    // top caps Compute a,b,c for the quadratic formula, then solve for t1, t2,
+    // and t, then solve for z1, z2
+    double zmin = -0.5, zmax = 0.5;
+    double x0, x1, t1, t2, z1,
+        z2; // x0, x1 are just temps to store intermediate results
+    double a = direction[0] * direction[0] + direction[1] * direction[1];
+    double b = 2 * origin[0] * direction[0] + 2 * origin[1] * direction[1];
+    double c = origin[0] * origin[0] + origin[1] * origin[1] - 1;
+
+    // Solve for t using quadratic equation
+    double d = b * b - 4 * a * c;
+    if (d < 0) {
+        return false;
+    } else if (d == 0) {
+        x0 = -b / (2 * a);
+        x1 = -b / (2 * a);
+    } else {
+        x0 = (-b + sqrt(d)) / (2 * a);
+        x1 = (-b - sqrt(d)) / (2 * a);
+    }
+    // Solve for z1 and z2 for caps
+    //  z1 = zE + t1zD and z2 = zE + t2zD
+    z1 = origin[2] + x0 * direction[2];
+    z2 = origin[2] + x1 * direction[2];
+
+    // Assign t1 the minimum positive value
+    if (x0 < 0 && x1 < 0) {
+        return false;
+    } else if (x0 < 0) {
+        t1 = x1;
+    } else if (x1 < 0) {
+        t1 = x0;
+    } else {
+        t1 = fmin(x0, x1);
+    }
+
+    // Check if the ray intersects the two caps
+    x0 = (zmin - origin[2]) / direction[2];
+    x1 = (zmax - origin[2]) / direction[2];
+    t2 = fmin(x0, x1);
+    
+    // Compute new intersection point based on t2
+    Point3D intersectP = origin + t2 * direction;
+
+    if (t1 * t1 < e || t2 * t2 < e) {
         return false;
     }
 
-    // Intersection point
-    Point3D point = origin + t * direction;
-
-    Vector3D normal(point[0], 0, point[2]);
+    if (x0 < x1) {
+        Point3D n(0, 0, -1);
+        normal = n - cylinderOrigin;
+    } else {
+        Point3D n(0, 0, 1);
+        normal = n - cylinderOrigin;
+    }
     normal.normalize();
 
-    Intersection intersection;
-    // Check if ray intersects with cylinder body
-    if (point[1] < 0.5 && point[1] > -0.5) {
-        intersection =
-            set_intersect_values(t, normal, point, worldToModel, modelToWorld);
+    // check if insects with top or bottom cap
+    double x = intersectP[0], y = intersectP[1];
+    if (x * x + y * y <= 1) {
+        if (ray.intersection.none || ray.intersection.t_value > x1) {
+            ray.intersection.point = intersectP;
+            ray.intersection.normal = normal;
+            ray.intersection.t_value = t2;
+            ray.intersection.none = false;
+            return true;
+        }
     }
 
-    // Check if ray intersects with the top or bottom part of the cylinder
-    // float t_bot = (-0.5 - origin[1]) / direction[1];
-    // Vector3D norm_bot = Vector3D(0, -1, 0);
-    // if(intersects_top_or_bot(t_bot, origin, direction, intersection)){
-    //     intersection = set_intersect_values(t_bot, normal, point,
-    //     worldToModel, modelToWorld);
-    // }
+    intersectP = origin + t1 * direction;
+    Vector3D normal2(intersectP[0], intersectP[1], 0);
+    normal2.normalize();
 
-    // float t_top = (0.5 - origin[1]) / direction[1];
-    // Vector3D norm_top = Vector3D(0, 1, 0);
-    // if(intersects_top_or_bot(t_top, origin, direction, intersection)){
-    //     intersection = set_intersect_values(t_top, normal, point,
-    //     worldToModel, modelToWorld);
-    // }
-
-    if (!intersection.none &&
-        (ray.intersection.none ||
-         intersection.t_value < ray.intersection.t_value)) {
-        ray.intersection = intersection;
-        return true;
+    // check if intersects with the sides
+    if (intersectP[2] < zmax && intersectP[2] > zmin) {
+        if (ray.intersection.none || ray.intersection.t_value > x1) {
+            ray.intersection.t_value = t1;
+            ray.intersection.point = modelToWorld * intersectP;
+            ray.intersection.none = false;
+            ray.intersection.normal = modelToWorld * normal2;
+            return true;
+        }
     }
 
     return false;

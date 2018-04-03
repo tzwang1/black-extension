@@ -102,7 +102,7 @@ Color Raytracer::shadeRay(Ray3D &ray, Scene &scene, LightList &light_list, int n
             
             num_reflect++;
             new_ray.col = shadeRay(new_ray, scene, light_list, num_reflect);
-        
+
             // col = col + shadeRay(new_ray, scene, light_list, num_reflect);
             col = col + intersect.mat->specular * new_ray.col;
         }
