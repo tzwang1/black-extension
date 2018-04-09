@@ -9,12 +9,13 @@
 ***********************************************************/
 
 #include "raytracer.h"
+#include "util.h"
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
 
 const int MAX_REFLECT = 1;
-const double ERR = 1e-5;
+const double ERR = 1e-3;
 
 void Raytracer::traverseScene(Scene &scene, Ray3D &ray) {
     for (size_t i = 0; i < scene.size(); ++i) {
@@ -39,76 +40,73 @@ void Raytracer::computeTransforms(Scene &scene) {
     }
 }
 
-void Raytracer::computeShading(Ray3D &ray, LightList &light_list, Scene &scene) {
+void Raytracer::computeShading(Ray3D &ray, LightList &light_list,
+                               Scene &scene) {
     for (size_t i = 0; i < light_list.size(); ++i) {
         LightSource *light = light_list[i];
 
-        // light->shade(ray);
-
         // Each lightSource provides its own shading function.
         // Implement shadows here if needed.
-        // Check if there is an object between the light source and the intersection point
-        Vector3D light_dir = light->get_position() - ray.intersection.point;
-        light_dir.normalize();
-        Point3D intersect = ray.intersection.point + (ERR*ray.intersection.normal) + (ERR*light_dir);
-        bool blocked = false;
 
-        Ray3D new_ray(intersect, light_dir);
-        for (size_t i = 0; i < scene.size(); ++i) {
-            SceneNode *node = scene[i];
+        Vector3D shadow_dir = light->get_position() - ray.intersection.point;
+        shadow_dir.normalize();
+        Point3D shadow_origin = ray.intersection.point + ERR * shadow_dir;
 
-            if (node->obj->intersect(new_ray, node->worldToModel, node->modelToWorld)) {
-                blocked = true;
-                break;
-            }
-        }
-        if(blocked){
-            ray.col = Color(0.0, 0.0, 0.0);
-        } else {
+        Ray3D shadow_ray(shadow_origin, shadow_dir);
+
+        // Find intersections with ray
+        traverseScene(scene, shadow_ray);
+
+        if (shadow_ray.intersection.none) {
             light->shade(ray);
+        } else {
+            ray.col = ray.col + ray.intersection.mat->ambient * light->get_ambient();
         }
     }
 }
 
-Color Raytracer::shadeRay(Ray3D &ray, Scene &scene, LightList &light_list, int num_reflect) {
-    Color col(0.0, 0.0, 0.0);
+Color Raytracer::shadeRay(Ray3D &ray, Scene &scene, LightList &light_list,
+                          int num_reflect) {
+    Color color(0.0, 0.0, 0.0);
     traverseScene(scene, ray);
 
     // Don't bother shading if the ray didn't hit
     // anything.
     if (!ray.intersection.none) {
         computeShading(ray, light_list, scene);
-        col = ray.col;
+        color = ray.col;
     }
 
     // You'll want to call shadeRay recursively (with a different ray,
     // of course) here to implement reflection/refraction effects.
 
     // Reflect a ray MAX_REFLECT number of times
-    // TODO: Fix implementation 
+    // TODO: Fix implementation
     if (!ray.intersection.none && ray.intersection.mat->reflective) {
-        if(num_reflect < MAX_REFLECT){
+        if (num_reflect < MAX_REFLECT) {
             Intersection intersect = ray.intersection;
             Vector3D normal = intersect.normal;
             normal.normalize();
 
             Vector3D light_ray = -ray.dir;
-            Vector3D reflect_dir = 2.0 * normal.dot(light_ray) * normal - light_ray;
+            Vector3D reflect_dir =
+                2.0 * normal.dot(light_ray) * normal - light_ray;
             reflect_dir.normalize();
-            
+
             Point3D new_intersect = intersect.point + (ERR * intersect.normal);
-            // Shoot a new ray from the intersect point in the direction of reflection
+            // Shoot a new ray from the intersect point in the direction of
+            // reflection
             Ray3D new_ray(new_intersect, reflect_dir);
-            
+
             num_reflect++;
             new_ray.col = shadeRay(new_ray, scene, light_list, num_reflect);
-        
+
             // col = col + shadeRay(new_ray, scene, light_list, num_reflect);
-            col = col + intersect.mat->specular * new_ray.col;
+            color = color + intersect.mat->specular * new_ray.col;
         }
     }
-    col.clamp();
-    return col;
+    color.clamp();
+    return color;
 }
 
 void Raytracer::render(Camera &camera, Scene &scene, LightList &light_list,

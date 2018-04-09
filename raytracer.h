@@ -34,7 +34,14 @@ class Raytracer {
     // with all light sources in the scene.
     void computeShading(Ray3D &ray, LightList &light_list, Scene &scene);
 
+    Color computeColor(Ray3D &ray, LightSource *light, Scene &scene, int n, float k);
+
     // Precompute the modelToWorld and worldToModel transformations for each
     // object in the scene.
     void computeTransforms(Scene &scene);
+
+    // Depth of field
+    void computeDepthOfField(Ray3D& primary_ray, Point3D& origin, double focal_len, double apeture_size) {
+      
+    }
 };
