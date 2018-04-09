@@ -39,4 +39,9 @@ class Raytracer {
     // Precompute the modelToWorld and worldToModel transformations for each
     // object in the scene.
     void computeTransforms(Scene &scene);
+
+    // Depth of field
+    void computeDepthOfField(Ray3D& primary_ray, Point3D& origin, double focal_len, double apeture_size) {
+      
+    }
 };

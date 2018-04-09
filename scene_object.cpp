@@ -251,26 +251,21 @@ bool UnitCylinder::intersect(Ray3D &ray, const Matrix4x4 &worldToModel, const Ma
                     ray.intersection.none = false;
                     return true;
                 }
-
                 return false;
             }
-
             return false;
         }
-
         return false;
     }
 
     // ray_origin[2] == 0
 
     a = pow(ray_dir[0], 2) + pow(ray_dir[1], 2);
-    b = 2 * (ray_dir[0] * ray_origin[0] +
-                    ray_dir[1] * ray_origin[1]);
+    b = 2 * (ray_dir[0] * ray_origin[0] + ray_dir[1] * ray_origin[1]);
     c = pow(ray_origin[0], 2) + pow(ray_origin[1], 2) - 1;
     d = b * b - 4 * a * c;
 
     if (d < 0) {
-
         return false;
     }
 
