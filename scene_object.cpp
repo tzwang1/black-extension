@@ -43,8 +43,7 @@ bool solveQuadratic(double &a, double &b, double &c, double &t) {
 
 // Sets values for an intersecting point
 void set_intersect_values(Ray3D &ray, double t, Vector3D normal, Point3D point,
-                          const Matrix4x4 &worldToModel,
-                          const Matrix4x4 &modelToWorld) {
+                          const Matrix4x4 &worldToModel, const Matrix4x4 &modelToWorld) {
     ray.intersection.t_value = t;
     ray.intersection.point = modelToWorld * point;
     normal = transNorm(worldToModel, normal);
@@ -85,11 +84,9 @@ bool UnitSquare::intersect(Ray3D &ray, const Matrix4x4 &worldToModel,
     Vector3D normal(0.0, 0.0, 1.0);
 
     // Check if the point of intersection is within the unit square.
-    if ((-0.5 <= point[0]) && (point[0] <= 0.5) && (-0.5 <= point[1]) &&
-        (point[1] <= 0.5)) {
+    if ((-0.5 <= point[0]) && (point[0] <= 0.5) && (-0.5 <= point[1]) && (point[1] <= 0.5)) {
         if (ray.intersection.none || t < ray.intersection.t_value) {
-            set_intersect_values(ray, t, normal, point, worldToModel,
-                                 modelToWorld);
+            set_intersect_values(ray, t, normal, point, worldToModel, modelToWorld);
             return true;
         }
     }
@@ -141,8 +138,7 @@ bool UnitSphere::intersect(Ray3D &ray, const Matrix4x4 &worldToModel,
 bool intersects_top_or_bot(double t, Point3D origin, Vector3D direction,
                            Intersection intersection) {
     Point3D point = origin + t * direction;
-    if (point[0] * point[0] + point[2] * point[2] < 1 && t > 0 &&
-        t < intersection.t_value) {
+    if (point[0] * point[0] + point[2] * point[2] < 1 && t > 0 && t < intersection.t_value) {
         return true;
     }
     return false;
@@ -150,99 +146,194 @@ bool intersects_top_or_bot(double t, Point3D origin, Vector3D direction,
 
 bool UnitCylinder::intersect(Ray3D &ray, const Matrix4x4 &worldToModel,
                              const Matrix4x4 &modelToWorld) {
+    // convert ray to model space
+    Ray3D rayModelSpace = Ray3D(worldToModel * ray.origin, worldToModel * ray.dir);
 
-    // Setup new ray and transform to model space
-    Point3D origin = worldToModel * ray.origin;
-    Vector3D direction = worldToModel * ray.dir;
+    // center of unit cyclinder
+    Point3D center(0, 0, 0);
 
-    // Setup
-    Point3D cylinderOrigin(0, 0, 0);
+    double t_value = 0.0;
+    double temp1, temp2;
+
+    // the radius of the disk
+    double radius = 1.0;
+
     Vector3D normal;
-    float e = 0.0001;
 
-    // Set up for computing the intersect, zmin and zmax are for the bottom and
-    // top caps Compute a,b,c for the quadratic formula, then solve for t1, t2,
-    // and t, then solve for z1, z2
-    double zmin = -0.5, zmax = 0.5;
-    double x0, x1, t1, t2, z1,
-        z2; // x0, x1 are just temps to store intermediate results
-    double a = direction[0] * direction[0] + direction[1] * direction[1];
-    double b = 2 * origin[0] * direction[0] + 2 * origin[1] * direction[1];
-    double c = origin[0] * origin[0] + origin[1] * origin[1] - 1;
+    Point3D intersectionPoint;
 
-    // Solve for t using quadratic equation
-    double d = b * b - 4 * a * c;
-    if (d < 0) {
-        return false;
-    } else if (d == 0) {
-        x0 = -b / (2 * a);
-        x1 = -b / (2 * a);
-    } else {
-        x0 = (-b + sqrt(d)) / (2 * a);
-        x1 = (-b - sqrt(d)) / (2 * a);
-    }
-    // Solve for z1 and z2 for caps
-    //  z1 = zE + t1zD and z2 = zE + t2zD
-    z1 = origin[2] + x0 * direction[2];
-    z2 = origin[2] + x1 * direction[2];
+    if (rayModelSpace.dir[2] != 0) {
+        //  intersection with z = 0.5
+        temp1 = (-0.5 - rayModelSpace.origin[2]) / rayModelSpace.dir[2];
+        //  intersection with z = 0.5
+        temp2 = (0.5 - rayModelSpace.origin[2]) / rayModelSpace.dir[2];
 
-    // Assign t1 the minimum positive value
-    if (x0 < 0 && x1 < 0) {
-        return false;
-    } else if (x0 < 0) {
-        t1 = x1;
-    } else if (x1 < 0) {
-        t1 = x0;
-    } else {
-        t1 = fmin(x0, x1);
-    }
+        // intersect z = 0.5 first
+        t_value = temp2;
+        Point3D normal_temp(0, 0, 1);
 
-    // Check if the ray intersects the two caps
-    x0 = (zmin - origin[2]) / direction[2];
-    x1 = (zmax - origin[2]) / direction[2];
-    t2 = fmin(x0, x1);
-    
-    // Compute new intersection point based on t2
-    Point3D intersectP = origin + t2 * direction;
-
-    if (t1 * t1 < e || t2 * t2 < e) {
-        return false;
-    }
-
-    if (x0 < x1) {
-        Point3D n(0, 0, -1);
-        normal = n - cylinderOrigin;
-    } else {
-        Point3D n(0, 0, 1);
-        normal = n - cylinderOrigin;
-    }
-    normal.normalize();
-
-    // check if insects with top or bottom cap
-    double x = intersectP[0], y = intersectP[1];
-    if (x * x + y * y <= 1) {
-        if (ray.intersection.none || ray.intersection.t_value > x1) {
-            ray.intersection.point = intersectP;
-            ray.intersection.normal = normal;
-            ray.intersection.t_value = t2;
-            ray.intersection.none = false;
-            return true;
+        if (temp1 < temp2) {
+            t_value = temp1;
+            // Construct the normal for the closer disk, which points on the
+            // negative z axis
+            Point3D normal_temp(0, 0, -1);
         }
+        normal = normal_temp - center;
+        normal.normalize();
+
+        if (t_value <= 0.0001) {
+
+            return false;
+        }
+
+        intersectionPoint = rayModelSpace.origin + t_value * rayModelSpace.dir;
+
+        // intersects with top/ bot disk
+        if (intersectionPoint[0] * intersectionPoint[0] +
+                intersectionPoint[1] * intersectionPoint[1] <=
+            (radius * radius)) {
+
+            if (ray.intersection.none || t_value < ray.intersection.t_value) {
+                ray.intersection.point = intersectionPoint;
+
+                ray.intersection.normal = normal;
+                ray.intersection.t_value = t_value;
+                ray.intersection.none = false;
+
+                return true;
+            }
+
+            return false;
+        }
+
+        // intersection with body
+        double a = rayModelSpace.dir[0] * rayModelSpace.dir[0] +
+                   rayModelSpace.dir[1] * rayModelSpace.dir[1];
+        double b = (rayModelSpace.origin[0] * rayModelSpace.dir[0] +
+                    rayModelSpace.origin[1] * rayModelSpace.dir[1]);
+        double c = rayModelSpace.origin[0] * rayModelSpace.origin[0] +
+                   rayModelSpace.origin[1] * rayModelSpace.origin[1] - radius * radius;
+
+        double discriminant = b * b - a * c;
+
+        if (discriminant < 0) {
+            // no real root
+            return false;
+        }
+
+        double root1 = (-b + sqrt(discriminant)) / a;
+        double root2 = (-b - sqrt(discriminant)) / a;
+
+        if (root1 > 0 || root2 > 0) {
+
+            if (root1 > 0 && root2 > 0) {
+
+                if (root1 <= root2) {
+                    t_value = root1;
+                }
+
+                else {
+                    t_value = root2;
+                }
+            }
+
+            else if (root1 > 0) {
+                t_value = root1;
+            }
+
+            else {
+                t_value = root2;
+            }
+            intersectionPoint = rayModelSpace.origin + t_value * rayModelSpace.dir;
+            normal[0] = intersectionPoint[0];
+            normal[1] = intersectionPoint[1];
+            normal[2] = 0;
+            normal.normalize();
+
+            if (intersectionPoint[2] < 0.5 && intersectionPoint[2] > -0.5) {
+
+                if (ray.intersection.none || t_value < ray.intersection.t_value) {
+                    ray.intersection.point = modelToWorld * intersectionPoint;
+                    Point3D normalTemp;
+                    normalTemp[0] = intersectionPoint[0];
+                    normalTemp[1] = intersectionPoint[1];
+                    normalTemp[2] = 0;
+                    ray.intersection.normal = modelToWorld * (normalTemp - center);
+                    ray.intersection.t_value = t_value;
+                    ray.intersection.none = false;
+                    return true;
+                }
+
+                return false;
+            }
+
+            return false;
+        }
+
+        return false;
     }
 
-    intersectP = origin + t1 * direction;
-    Vector3D normal2(intersectP[0], intersectP[1], 0);
-    normal2.normalize();
+    // rayModelSpace.origin[2] == 0
 
-    // check if intersects with the sides
-    if (intersectP[2] < zmax && intersectP[2] > zmin) {
-        if (ray.intersection.none || ray.intersection.t_value > x1) {
-            ray.intersection.t_value = t1;
-            ray.intersection.point = modelToWorld * intersectP;
-            ray.intersection.none = false;
-            ray.intersection.normal = modelToWorld * normal2;
-            return true;
+    double a = pow(rayModelSpace.dir[0], 2) + pow(rayModelSpace.dir[1], 2);
+    double b = 2 * (rayModelSpace.dir[0] * rayModelSpace.origin[0] +
+                    rayModelSpace.dir[1] * rayModelSpace.origin[1]);
+    double c = pow(rayModelSpace.origin[0], 2) + pow(rayModelSpace.origin[1], 2) - 1;
+    double discriminant = b * b - 4 * a * c;
+
+    if (discriminant < 0) {
+
+        return false;
+    }
+
+    double root1 = (-b + sqrt(discriminant)) / (2 * a);
+    double root2 = (-b - sqrt(discriminant)) / (2 * a);
+
+    if (root1 > 0 || root2 > 0) {
+
+        if (root1 > 0 && root2 > 0) {
+
+            if (root1 <= root2) {
+                t_value = root1;
+            }
+
+            else {
+                t_value = root2;
+            }
         }
+
+        else if (root1 > 0) {
+            t_value = root1;
+        }
+
+        else {
+            t_value = root2;
+        }
+
+        intersectionPoint = rayModelSpace.origin + t_value * rayModelSpace.dir;
+        normal[0] = intersectionPoint[0];
+        normal[1] = intersectionPoint[1];
+        normal[2] = 0;
+        normal.normalize();
+
+        if (intersectionPoint[2] < 0.5 && intersectionPoint[2] > -0.5) {
+
+            if (ray.intersection.none || t_value < ray.intersection.t_value) {
+                ray.intersection.point = modelToWorld * intersectionPoint;
+                Point3D normalTemp;
+                normalTemp[0] = intersectionPoint[0];
+                normalTemp[1] = intersectionPoint[1];
+                normalTemp[2] = 0;
+                ray.intersection.normal = modelToWorld * (normalTemp - center);
+                ray.intersection.t_value = t_value;
+                ray.intersection.none = false;
+                return true;
+            }
+
+            return false;
+        }
+
+        return false;
     }
 
     return false;
