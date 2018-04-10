@@ -4,6 +4,7 @@
         Starter code for Assignment 3
         
 
+
         This file contains the interface and datastructures of the raytracer.
         Simple traversal and addition code to the datastructures are given to
 you.
@@ -18,8 +19,7 @@ you.
 class Raytracer {
   public:
     // Renders 3D scene to an image given camera and lights setup.
-    void render(Camera &camera, Scene &scene, LightList &light_list,
-                Image &image);
+    void render(Camera &camera, Scene &scene, LightList &light_list, Image &image);
 
   private:
     // Return the color of the ray after intersection and shading, call
@@ -41,7 +41,5 @@ class Raytracer {
     void computeTransforms(Scene &scene);
 
     // Depth of field
-    void computeDepthOfField(Ray3D& primary_ray, Point3D& origin, double focal_len, double apeture_size) {
-      
-    }
+    Ray3D computeDepthOfField(Ray3D &ray, Point3D &origin, double F, double R);
 };

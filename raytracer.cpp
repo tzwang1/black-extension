@@ -13,6 +13,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
+#include <omp.h>
 
 const int MAX_REFLECT = 1;
 const double ERR = 1e-3;
@@ -40,8 +41,7 @@ void Raytracer::computeTransforms(Scene &scene) {
     }
 }
 
-void Raytracer::computeShading(Ray3D &ray, LightList &light_list,
-                               Scene &scene) {
+void Raytracer::computeShading(Ray3D &ray, LightList &light_list, Scene &scene) {
     for (size_t i = 0; i < light_list.size(); ++i) {
         LightSource *light = light_list[i];
 
@@ -65,8 +65,7 @@ void Raytracer::computeShading(Ray3D &ray, LightList &light_list,
     }
 }
 
-Color Raytracer::shadeRay(Ray3D &ray, Scene &scene, LightList &light_list,
-                          int num_reflect) {
+Color Raytracer::shadeRay(Ray3D &ray, Scene &scene, LightList &light_list, int num_reflect) {
     Color color(0.0, 0.0, 0.0);
     traverseScene(scene, ray);
 
@@ -89,13 +88,12 @@ Color Raytracer::shadeRay(Ray3D &ray, Scene &scene, LightList &light_list,
             normal.normalize();
 
             Vector3D light_ray = -ray.dir;
-            Vector3D reflect_dir =
-                2.0 * normal.dot(light_ray) * normal - light_ray;
+            Vector3D reflect_dir = 2.0 * normal.dot(light_ray) * normal - light_ray;
             reflect_dir.normalize();
 
             Point3D new_intersect = intersect.point + (ERR * intersect.normal);
-            // Shoot a new ray from the intersect point in the direction of
-            // reflection
+
+            // Shoot a new ray from the intersect point in the direction of reflection
             Ray3D new_ray(new_intersect, reflect_dir);
 
             num_reflect++;
@@ -109,8 +107,7 @@ Color Raytracer::shadeRay(Ray3D &ray, Scene &scene, LightList &light_list,
     return color;
 }
 
-void Raytracer::render(Camera &camera, Scene &scene, LightList &light_list,
-                       Image &image) {
+void Raytracer::render(Camera &camera, Scene &scene, LightList &light_list, Image &image) {
     computeTransforms(scene);
 
     Matrix4x4 viewToWorld;
@@ -125,9 +122,9 @@ void Raytracer::render(Camera &camera, Scene &scene, LightList &light_list,
             // Implement anti aliasing with samples*samples number
             // of rays for each pixel
             for (int k = 0; k < samples; k++) {
-                for(int l = 0; l < samples; l++) {
-                    double rand_width = ((double) rand() / RAND_MAX)/samples + l/samples + j;
-                    double rand_height = ((double) rand() / RAND_MAX)/samples + k/samples + i;
+                for (int l = 0; l < samples; l++) {
+                    double rand_width = ((double)rand() / RAND_MAX) / samples + l / samples + j;
+                    double rand_height = ((double)rand() / RAND_MAX) / samples + k / samples + i;
 
                     Point3D origin(0, 0, 0);
                     Point3D imagePlane;
@@ -141,12 +138,12 @@ void Raytracer::render(Camera &camera, Scene &scene, LightList &light_list,
                     ray.origin = viewToWorld * origin;
                     ray.dir = viewToWorld * (imagePlane - origin);
                     ray.dir.normalize();
-                    
+
                     // Adding colors together
                     color = color + shadeRay(ray, scene, light_list, 0);
                 }
             }
-        
+
             // Sets up ray origin and direction in view space,
             // image plane is at z = -1.
             // Point3D origin(0, 0, 0);
@@ -164,11 +161,28 @@ void Raytracer::render(Camera &camera, Scene &scene, LightList &light_list,
             // Color col = shadeRay(ray, scene, light_list, 0);
             // image.setColorAtPixel(i, j, col);
             // Averaging colors by total number of samples taken
-            color[0] = color[0] / (samples*samples);
-            color[1] = color[1] / (samples*samples);
-            color[2] = color[2] / (samples*samples);
+            color[0] = color[0] / (samples * samples);
+            color[1] = color[1] / (samples * samples);
+            color[2] = color[2] / (samples * samples);
             color.clamp();
             image.setColorAtPixel(i, j, color);
         }
     }
+}
+
+Ray3D computeDepthOfField(Ray3D &ray, Point3D &origin, double F, double R) {
+    double normalizer = double(RAND_MAX);
+
+    // focal point
+    Point3D fp = origin + F * ray.dir;
+
+    // random point on lens
+    double rand1 = R * (2 * (rand() / normalizer) - 1);
+    double rand2 = R * (2 * (rand() / normalizer) - 1);
+    Point3D secondary_ray_point = origin + Vector3D(rand1, rand2, 0.0);
+
+    // compute result
+    Vector3D secondary_ray_dir = fp - secondary_ray_point;
+
+    return Ray3D(secondary_ray_point, secondary_ray_dir);
 }
