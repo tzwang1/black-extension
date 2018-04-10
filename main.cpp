@@ -98,7 +98,7 @@ int main(int argc, char *argv[]) {
     chrome_sphere->mat->refractive = 1.3;
 
     // Apply some transformations to the gold cylinder
-    gold_cylinder->translate(Vector3D(0, 0, -2));
+    gold_cylinder->translate(Vector3D(0, 0, -3));
     gold_cylinder->mat->reflective = false;
     gold_cylinder->scale(Point3D(0, 0, 0), factor1);
 

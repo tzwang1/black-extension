@@ -34,3 +34,4 @@
 # User ignores
 *.bmp
 raytracer
+.vscode

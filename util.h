@@ -1,8 +1,6 @@
 /***********************************************************
 
         Starter code for Assignment 3
-        
-
         Utility functions and structures (based on code from CGL, University of
 Waterloo), modify this file as you see fit.
 
@@ -143,7 +141,7 @@ struct Material {
     Color specular;
     // Specular exponent.
     double specular_exp;
-    
+
     bool reflective;
 
     double refractive;
