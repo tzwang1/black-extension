@@ -18,6 +18,30 @@
 const int MAX_REFLECT = 1;
 const double ERR = 1e-3;
 
+
+Vector3D computeGlossyVector(Vector3D N, Vector3D R, double roughness) {
+
+    // orthonormal basis at intersection point
+    Vector3D u = R.cross(N);
+
+    u.normalize();
+
+    Vector3D v = R.cross(u);
+    v.normalize();
+
+    // choose uniformly sampled random direction
+    double theta = 2 * M_PI * ((rand() / ((double)RAND_MAX)) * roughness);
+    double phi = 2 * M_PI * ((rand() / ((double)RAND_MAX)) * roughness);
+    double x = sin(theta) * cos(phi);
+    double y = sin(theta) * sin(phi);
+    double z = cos(theta);
+
+    Vector3D newR = x * u + y * v + z * R;
+    newR.normalize();
+
+    return newR;
+}
+
 void Raytracer::traverseScene(Scene &scene, Ray3D &ray) {
     for (size_t i = 0; i < scene.size(); ++i) {
         SceneNode *node = scene[i];
@@ -113,18 +137,40 @@ Color Raytracer::shadeRay(Ray3D &ray, Scene &scene, LightList &light_list, int n
             Vector3D light_ray = -ray.dir;
             Vector3D reflect_dir = 2.0 * normal.dot(light_ray) * normal - light_ray;
             reflect_dir.normalize();
-
             Point3D new_intersect = intersect.point + (ERR * intersect.normal);
 
             // Shoot a new ray from the intersect point in the direction of reflection
             Ray3D new_ray(new_intersect, reflect_dir);
+            Color new_color(0.0, 0.0, 0.0);
+            
+            if (ray.intersection.mat->glossy) {
+                // Glossy reflection
+                for (size_t i = 0; i < 20; i++) {
+                    // compute new direction for glossy reflection
+                    new_ray.dir = computeGlossyVector(normal, reflect_dir, 0.0);
+                    new_ray.origin = ray.intersection.point + 0.001 * new_ray.dir;
+                    num_reflect++;
+                    new_color = new_color + 1.0 / 20 * shadeRay(new_ray, scene, light_list, num_reflect);
+                }
+                new_ray.col = new_color;
+                col = col + intersect.mat->transparency * intersect.mat->specular * new_ray.col;
+            } else {
+                num_reflect++;
+                new_ray.col = shadeRay(new_ray, scene, light_list, num_reflect);
+                // col = col + shadeRay(new_ray, scene, light_list, num_reflect);
+                col = col + intersect.mat->transparency * intersect.mat->specular * new_ray.col;
+            }
 
-            num_reflect++;
-            new_ray.col = shadeRay(new_ray, scene, light_list, num_reflect);
-
-            // col = col + shadeRay(new_ray, scene, light_list, num_reflect);
-            col = col + (intersect.mat->transparency * intersect.mat->specular * new_ray.col);
-
+            // // Glossy reflection
+            // for (size_t i = 0; i < 20; i++) {
+            //     // compute new direction for glossy reflection
+            //     new_ray.dir = computeGlossyVector(normal, reflect_dir, 0.0);
+            //     new_ray.origin = intersect.point + 0.001 * new_ray.dir;
+            //     num_reflect++;
+            //     new_color = new_color + 1.0 / 20 * shadeRay(new_ray, scene, light_list, num_reflect);
+            // }
+            // new_ray.col = new_color;
+            // col = col + 0.9 * intersect.mat->specular * new_ray.col;
         }
     }
 
@@ -209,9 +255,11 @@ void Raytracer::render(Camera &camera, Scene &scene, LightList &light_list, Imag
             Color col = shadeRay(ray, scene, light_list, 0);
             image.setColorAtPixel(i, j, col);
             // Averaging colors by total number of samples taken
-            // color[0] = color[0] / (samples * samples);
-            // color[1] = color[1] / (samples * samples);
-            // color[2] = color[2] / (samples * samples);
+            
+            // normalize the colors and clamp them
+            color[0] = color[0] / (samples * samples);
+            color[1] = color[1] / (samples * samples);
+            color[2] = color[2] / (samples * samples);
             color.clamp();
             // image.setColorAtPixel(i, j, color);
         }
@@ -255,6 +303,5 @@ Color Raytracer::textureColor(Ray3D &ray) {
     
    
 }
-
 
 
