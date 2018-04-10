@@ -95,12 +95,16 @@ Color Raytracer::shadeRay(Ray3D &ray, Scene &scene, LightList &light_list, int n
     Color col(0.0, 0.0, 0.0);
     traverseScene(scene, ray);
 
-    // printf("Shading ray");
+    // printf("Intersection = ");
+    // std::cout << ray.intersection.none << std::endl;
+    // printf("Test\n");
+    // std::cout << ray.intersection.mat->has_texture << std::endl;
     if(!ray.intersection.none && ray.intersection.mat->has_texture){
+        // printf("Texture being mapped");
         int width = ray.intersection.mat->width;
         int height = ray.intersection.mat->height;
-        int x = ray.tex_u * width; 
-        int y = ray.tex_v * height;
+        int x = ray.intersection.tex_u * width; 
+        int y = ray.intersection.tex_v * height;
         
         // Convert to rgb array index
         int i = (x * width) + y;
@@ -202,7 +206,6 @@ Color Raytracer::shadeRay(Ray3D &ray, Scene &scene, LightList &light_list, int n
 
 void Raytracer::render(Camera &camera, Scene &scene, LightList &light_list, Image &image) {
     computeTransforms(scene);
-
     Matrix4x4 viewToWorld;
     double factor = (double(image.height) / 2) / tan(camera.fov * M_PI / 360.0);
 
@@ -210,7 +213,6 @@ void Raytracer::render(Camera &camera, Scene &scene, LightList &light_list, Imag
     // Construct a ray for each pixel.
     Color color;
     double samples = 5;
-
     for (int i = 0; i < image.height; i++) {
         for (int j = 0; j < image.width; j++) {
             // Implement anti aliasing with samples*samples number
@@ -251,7 +253,6 @@ void Raytracer::render(Camera &camera, Scene &scene, LightList &light_list, Imag
             ray.origin = viewToWorld * origin;
             ray.dir = viewToWorld * (imagePlane - origin);
             ray.dir.normalize();
-
             Color col = shadeRay(ray, scene, light_list, 0);
             image.setColorAtPixel(i, j, col);
             // Averaging colors by total number of samples taken
@@ -287,8 +288,8 @@ Color Raytracer::textureColor(Ray3D &ray) {
     if(!ray.intersection.none and ray.intersection.mat->has_texture){
         int width = ray.intersection.mat->width;
         int height = ray.intersection.mat->height;
-        int x = ray.tex_u * width; 
-        int y = ray.tex_v * height;
+        int x = ray.intersection.tex_u * width; 
+        int y = ray.intersection.tex_v * height;
         
         // Convert to rgb array index
         int i = (x * width) + y;
@@ -299,9 +300,7 @@ Color Raytracer::textureColor(Ray3D &ray) {
         return Color( r, g, b );
     } 
 
-    return Color(0.0,0.0,0.0);
-    
-   
+    return Color(0.0,0.0,0.0); 
 }
 
 

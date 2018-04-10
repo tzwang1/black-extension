@@ -134,7 +134,7 @@ struct Material {
               has_texture = false;
           }
     Material(unsigned long int width, long int height, unsigned char *rarray, unsigned char *garray, unsigned char *barray):
-        width(width), height(height), rarray(rarray), garray(garray), barray(barray), has_texture(true) {}
+        width(width), height(height), rarray(rarray), garray(garray), barray(barray) {}
 
     // Ambient components for Phong shading.
     Color ambient;
@@ -174,6 +174,10 @@ struct Intersection {
     // Set to true when no intersection has occured.
     bool none;
 
+    // Texture coordinates
+    double tex_u;
+    double tex_v;
+
 };
 
 // Ray structure.
@@ -191,10 +195,6 @@ struct Ray3D {
     // Current colour of the ray, should be computed by the shading
     // function.
     Color col;
-
-    // Texture coordinates
-    double tex_u;
-    double tex_v;
 };
 
 struct Camera {

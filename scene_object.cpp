@@ -87,6 +87,12 @@ bool UnitSquare::intersect(Ray3D &ray, const Matrix4x4 &worldToModel,
     if ((-0.5 <= point[0]) && (point[0] <= 0.5) && (-0.5 <= point[1]) && (point[1] <= 0.5)) {
         if (ray.intersection.none || t < ray.intersection.t_value) {
             set_intersect_values(ray, t, normal, point, worldToModel, modelToWorld);
+
+            ray.intersection.tex_u = point[0] + 0.5;
+            ray.intersection.tex_v = 0.5 - point[1];
+
+            // std::cout << ray.intersection.tex_u << std::endl; 
+            // std::cout << ray.intersection.tex_v<< std::endl;
             return true;
         }
     }
@@ -129,6 +135,9 @@ bool UnitSphere::intersect(Ray3D &ray, const Matrix4x4 &worldToModel,
 
     if (ray.intersection.none || t < ray.intersection.t_value) {
         set_intersect_values(ray, t, normal, point, worldToModel, modelToWorld);
+        Vector3D n = ray.intersection.normal;
+        // ray.intersection.tex_u = (atan2(n[0], n[2])/(2*M_PI)) + 0.5;
+        // ray.intersection.tex_v = n[1] * 0.5 + 0.5;
         return true;
     }
 

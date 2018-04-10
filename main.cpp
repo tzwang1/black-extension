@@ -37,11 +37,6 @@ int main(int argc, char *argv[]) {
     unsigned long floor_w;
     long floor_h;
 
-    // if(!bmp_read("textures/horizontal.bmp", &floor_w, &floor_h, &rarray, &garray, &barray)){
-    //     std::cout << "Floor texture was sucessfully read!\n" << std::endl;
-    // } else {
-    //     std::cout << "Something went wrong while reading the texture" << std::endl;
-    // }
 
     if(!bmp_read("textures/horizontal.bmp", &floor_w, &floor_h, &rarray, &garray, &barray)){
         std::cout << "Floor texture was sucessfully read!\n" << std::endl;
@@ -58,6 +53,7 @@ int main(int argc, char *argv[]) {
     Material jade(Color(0, 0, 0), Color(0.54, 0.89, 0.63),
                   Color(0.316228, 0.316228, 0.316228), 12.8);
 
+    floor_texture.has_texture = true;
     // Defines a point light source.
     PointLight *pLight = new PointLight(Point3D(0, 0, 5), Color(0.9, 0.9, 0.9));
     light_list.push_back(pLight);
