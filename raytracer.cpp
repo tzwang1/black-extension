@@ -73,7 +73,11 @@ Color Raytracer::shadeRay(Ray3D &ray, Scene &scene, LightList &light_list, int n
     // anything.
     if (!ray.intersection.none) {
         computeShading(ray, light_list, scene);
+<<<<<<< HEAD
+        col = ray.intersection.mat->transparency * ray.col;
+=======
         color = ray.col;
+>>>>>>> 8279acbe76797e8a456089be62e8242765d91ac8
     }
 
     // You'll want to call shadeRay recursively (with a different ray,
@@ -100,7 +104,11 @@ Color Raytracer::shadeRay(Ray3D &ray, Scene &scene, LightList &light_list, int n
             new_ray.col = shadeRay(new_ray, scene, light_list, num_reflect);
 
             // col = col + shadeRay(new_ray, scene, light_list, num_reflect);
+<<<<<<< HEAD
+            col = col + (intersect.mat->transparency * intersect.mat->specular * new_ray.col);
+=======
             color = color + intersect.mat->specular * new_ray.col;
+>>>>>>> 8279acbe76797e8a456089be62e8242765d91ac8
         }
     }
     color.clamp();
