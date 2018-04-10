@@ -42,4 +42,7 @@ class Raytracer {
 
     // Depth of field
     Ray3D computeDepthOfField(Ray3D &ray, Point3D &origin, double F, double R);
+
+    // Soft shadow
+    Color computeSoftShadow(Ray3D& ray, Scene& scene, LightList& light_list, int grid_size);
 };

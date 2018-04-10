@@ -83,6 +83,7 @@ int main(int argc, char *argv[]) {
     gold_sphere->rotate('x', -45);
     gold_sphere->scale(Point3D(0, 0, 0), factor1);
     gold_sphere->mat->reflective = false;
+    gold_sphere->mat->glossy = false;
 
     // Apply some transformations to the floor
     double factor2[3] = {10.0, 10.0, 10.0};
@@ -98,8 +99,9 @@ int main(int argc, char *argv[]) {
     chrome_sphere->mat->refractive = 1.3;
 
     // Apply some transformations to the gold cylinder
-    gold_cylinder->translate(Vector3D(0, 0, -3));
-    gold_cylinder->mat->reflective = false;
+    gold_cylinder->translate(Vector3D(0, 0, -6));
+    gold_cylinder->mat->reflective = true;
+    gold_cylinder->mat->glossy = true;
     gold_cylinder->scale(Point3D(0, 0, 0), factor1);
 
     // Apply some transformations to the three walls.
