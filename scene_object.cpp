@@ -162,21 +162,21 @@ bool UnitCylinder::intersect(Ray3D &ray, const Matrix4x4 &worldToModel, const Ma
     Point3D intersectionPoint;
 
     if (ray_dir[2] != 0) {
-        // check for intersection with the caps at zmin and zmax
+        // Check if the ray intersects the two caps zmin and zmax
         temp1 = (zmin - ray_origin[2]) / ray_dir[2];
         temp2 = (zmax - ray_origin[2]) / ray_dir[2];
 
         // first set the intersect 
         t = temp2;
-        Point3D normal_temp(0, 0, 1);
+        Point3D _normal(0, 0, 1);
 
         if (temp1 < temp2) {
             t = temp1;
             // Construct the normal for the closer disk, which points on the
             // negative z axis
-            Point3D normal_temp(0, 0, -1);
+            Point3D _normal(0, 0, -1);
         }
-        normal = normal_temp - center;
+        normal = _normal - center;
         normal.normalize();
 
         if (t <= err) {
@@ -186,7 +186,7 @@ bool UnitCylinder::intersect(Ray3D &ray, const Matrix4x4 &worldToModel, const Ma
         intersectionPoint = ray_origin + t * ray_dir;
 
         // Intersection with cap and bottom
-        if (intersectionPoint[0] * intersectionPoint[0] + intersectionPoint[1] * intersectionPoint[1] <= radius * radius)) {
+        if (intersectionPoint[0] * intersectionPoint[0] + intersectionPoint[1] * intersectionPoint[1] <= radius * radius) {
 
             if (ray.intersection.none || t < ray.intersection.t_value) {
                 ray.intersection.point = intersectionPoint;
@@ -209,28 +209,28 @@ bool UnitCylinder::intersect(Ray3D &ray, const Matrix4x4 &worldToModel, const Ma
             return false;
         }
 
-        double root1 = (-b + sqrt(d)) / a;
-        double root2 = (-b - sqrt(d)) / a;
+        x1 = (-b + sqrt(d)) / a;
+        x2 = (-b - sqrt(d)) / a;
 
-        if (root1 > 0 || root2 > 0) {
+        if (x1 > 0 || x2 > 0) {
 
-            if (root1 > 0 && root2 > 0) {
+            if (x1 > 0 && x2 > 0) {
 
-                if (root1 <= root2) {
-                    t = root1;
+                if (x1 <= x2) {
+                    t = x1;
                 }
 
                 else {
-                    t = root2;
+                    t = x2;
                 }
             }
 
-            else if (root1 > 0) {
-                t = root1;
+            else if (x1 > 0) {
+                t = x1;
             }
 
             else {
-                t = root2;
+                t = x2;
             }
             intersectionPoint = ray_origin + t * ray_dir;
             normal[0] = intersectionPoint[0];
@@ -269,28 +269,28 @@ bool UnitCylinder::intersect(Ray3D &ray, const Matrix4x4 &worldToModel, const Ma
         return false;
     }
 
-    double root1 = (-b + sqrt(d)) / (2 * a);
-    double root2 = (-b - sqrt(d)) / (2 * a);
+    x1 = (-b + sqrt(d)) / (2 * a);
+    x2 = (-b - sqrt(d)) / (2 * a);
 
-    if (root1 > 0 || root2 > 0) {
+    if (x1 > 0 || x2 > 0) {
 
-        if (root1 > 0 && root2 > 0) {
+        if (x1 > 0 && x2 > 0) {
 
-            if (root1 <= root2) {
-                t = root1;
+            if (x1 <= x2) {
+                t = x1;
             }
 
             else {
-                t = root2;
+                t = x2;
             }
         }
 
-        else if (root1 > 0) {
-            t = root1;
+        else if (x1 > 0) {
+            t = x1;
         }
 
         else {
-            t = root2;
+            t = x2;
         }
 
         intersectionPoint = ray_origin + t * ray_dir;

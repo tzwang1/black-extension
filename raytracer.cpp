@@ -13,7 +13,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
-#include <omp.h>
+
 
 const int MAX_REFLECT = 1;
 const double ERR = 1e-3;
@@ -117,6 +117,7 @@ void Raytracer::render(Camera &camera, Scene &scene, LightList &light_list, Imag
     // Construct a ray for each pixel.
     Color color;
     double samples = 5;
+
     for (int i = 0; i < image.height; i++) {
         for (int j = 0; j < image.width; j++) {
             // Implement anti aliasing with samples*samples number
@@ -186,3 +187,6 @@ Ray3D computeDepthOfField(Ray3D &ray, Point3D &origin, double F, double R) {
 
     return Ray3D(secondary_ray_point, secondary_ray_dir);
 }
+
+
+
