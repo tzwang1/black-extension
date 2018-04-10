@@ -61,6 +61,8 @@ void Raytracer::computeShading(Ray3D &ray, LightList &light_list, Scene &scene) 
             light->shade(ray);
         } else {
             ray.col = ray.col + ray.intersection.mat->ambient * light->get_ambient();
+            // Color texture_color = getTextureColor(ray);
+            // ray.col = ray.col + texture_color;
         }
     }
 }
@@ -68,6 +70,27 @@ void Raytracer::computeShading(Ray3D &ray, LightList &light_list, Scene &scene) 
 Color Raytracer::shadeRay(Ray3D &ray, Scene &scene, LightList &light_list, int num_reflect) {
     Color col(0.0, 0.0, 0.0);
     traverseScene(scene, ray);
+
+    // printf("Shading ray");
+    if(!ray.intersection.none && ray.intersection.mat->has_texture){
+        int width = ray.intersection.mat->width;
+        int height = ray.intersection.mat->height;
+        int x = ray.tex_u * width; 
+        int y = ray.tex_v * height;
+        
+        // Convert to rgb array index
+        int i = (x * width) + y;
+
+        double r = (ray.intersection.mat->rarray[i])/255.0;
+        double g = (ray.intersection.mat->garray[i])/255.0;
+        double b = (ray.intersection.mat->barray[i])/255.0;
+
+        Color texture_color = Color(r,g,b);
+        // Color texture_color = textureColor(ray);
+        // col = col + texture_color;
+        col = col + texture_color;
+        return col;
+    }
 
     // Don't bother shading if the ray didn't hit
     // anything.
@@ -101,8 +124,32 @@ Color Raytracer::shadeRay(Ray3D &ray, Scene &scene, LightList &light_list, int n
 
             // col = col + shadeRay(new_ray, scene, light_list, num_reflect);
             col = col + (intersect.mat->transparency * intersect.mat->specular * new_ray.col);
+
         }
     }
+
+    // if(!ray.intersection.none && ray.intersection.mat->has_texture){
+    //     // printf("Has texture\n");
+    //     // Color texture_col = textureColor(ray);
+    //     int width = ray.intersection.mat->width;
+    //     int height = ray.intersection.mat->height;
+    //     int x = ray.tex_u * width; 
+    //     int y = ray.tex_v * height;
+        
+    //     // Convert to rgb array index
+    //     int i = (x * width) + y;
+
+    //     // printf("Dividing colors\n");
+    //     double r = (ray.intersection.mat->rarray[i])/255.0;
+    //     double g = (ray.intersection.mat->garray[i])/255.0;
+    //     double b = (ray.intersection.mat->barray[i])/255.0;
+    //     // printf("setting texture colors\n");
+    //     Color texture_color = Color(r,g,b);
+
+    //     // printf("Adding colors\n");
+    //     col = col + texture_color;
+    // }
+    
     col.clamp();
     return col;
 }
@@ -122,51 +169,51 @@ void Raytracer::render(Camera &camera, Scene &scene, LightList &light_list, Imag
         for (int j = 0; j < image.width; j++) {
             // Implement anti aliasing with samples*samples number
             // of rays for each pixel
-            for (int k = 0; k < samples; k++) {
-                for (int l = 0; l < samples; l++) {
-                    double rand_width = ((double)rand() / RAND_MAX) / samples + l / samples + j;
-                    double rand_height = ((double)rand() / RAND_MAX) / samples + k / samples + i;
+            // for (int k = 0; k < samples; k++) {
+            //     for (int l = 0; l < samples; l++) {
+            //         double rand_width = ((double)rand() / RAND_MAX) / samples + l / samples + j;
+            //         double rand_height = ((double)rand() / RAND_MAX) / samples + k / samples + i;
 
-                    Point3D origin(0, 0, 0);
-                    Point3D imagePlane;
+            //         Point3D origin(0, 0, 0);
+            //         Point3D imagePlane;
 
-                    imagePlane[0] = (-double(image.width) / 2 + rand_width) / factor;
-                    imagePlane[1] = (-double(image.height) / 2 + rand_height) / factor;
-                    imagePlane[2] = -1;
+            //         imagePlane[0] = (-double(image.width) / 2 + rand_width) / factor;
+            //         imagePlane[1] = (-double(image.height) / 2 + rand_height) / factor;
+            //         imagePlane[2] = -1;
 
-                    Ray3D ray;
-                    // TODO: Convert ray to world space
-                    ray.origin = viewToWorld * origin;
-                    ray.dir = viewToWorld * (imagePlane - origin);
-                    ray.dir.normalize();
+            //         Ray3D ray;
+            //         // TODO: Convert ray to world space
+            //         ray.origin = viewToWorld * origin;
+            //         ray.dir = viewToWorld * (imagePlane - origin);
+            //         ray.dir.normalize();
 
-                    // Adding colors together
-                    color = color + shadeRay(ray, scene, light_list, 0);
-                }
-            }
+            //         // Adding colors together
+            //         color = color + shadeRay(ray, scene, light_list, 0);
+            //     }
+            // }
 
             // Sets up ray origin and direction in view space,
             // image plane is at z = -1.
-            // Point3D origin(0, 0, 0);
-            // Point3D imagePlane;
-            // imagePlane[0] = (-double(image.width) / 2 + 0.5 + j) / factor;
-            // imagePlane[1] = (-double(image.height) / 2 + 0.5 + i) / factor;
-            // imagePlane[2] = -1;
+            Point3D origin(0, 0, 0);
+            Point3D imagePlane;
+            imagePlane[0] = (-double(image.width) / 2 + 0.5 + j) / factor;
+            imagePlane[1] = (-double(image.height) / 2 + 0.5 + i) / factor;
+            imagePlane[2] = -1;
 
-            // Ray3D ray;
-            // // TODO: Convert ray to world space
-            // ray.origin = viewToWorld * origin;
-            // ray.dir = viewToWorld * (imagePlane - origin);
-            // ray.dir.normalize();
+            Ray3D ray;
+            // TODO: Convert ray to world space
+            ray.origin = viewToWorld * origin;
+            ray.dir = viewToWorld * (imagePlane - origin);
+            ray.dir.normalize();
 
-            // Color col = shadeRay(ray, scene, light_list, 0);
-            // image.setColorAtPixel(i, j, col);
+            Color col = shadeRay(ray, scene, light_list, 0);
+            image.setColorAtPixel(i, j, col);
             // Averaging colors by total number of samples taken
-            color[0] = color[0] / (samples * samples);
-            color[1] = color[1] / (samples * samples);
-            color[2] = color[2] / (samples * samples);
+            // color[0] = color[0] / (samples * samples);
+            // color[1] = color[1] / (samples * samples);
+            // color[2] = color[2] / (samples * samples);
             color.clamp();
-            image.setColorAtPixel(i, j, color);
+            // image.setColorAtPixel(i, j, color);
         }
     }
 }
@@ -186,6 +233,27 @@ Ray3D computeDepthOfField(Ray3D &ray, Point3D &origin, double F, double R) {
     Vector3D secondary_ray_dir = fp - secondary_ray_point;
 
     return Ray3D(secondary_ray_point, secondary_ray_dir);
+}
+
+Color Raytracer::textureColor(Ray3D &ray) {
+    if(!ray.intersection.none and ray.intersection.mat->has_texture){
+        int width = ray.intersection.mat->width;
+        int height = ray.intersection.mat->height;
+        int x = ray.tex_u * width; 
+        int y = ray.tex_v * height;
+        
+        // Convert to rgb array index
+        int i = (x * width) + y;
+
+        double r = (ray.intersection.mat->rarray[i])/255.0;
+        double g = (ray.intersection.mat->garray[i])/255.0;
+        double b = (ray.intersection.mat->barray[i])/255.0;
+        return Color( r, g, b );
+    } 
+
+    return Color(0.0,0.0,0.0);
+    
+   
 }
 
 

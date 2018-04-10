@@ -30,17 +30,27 @@ int main(int argc, char *argv[]) {
     // bmp_read(char const *file_in_name, unsigned long int *width,
     //           long int *height, unsigned char **rarray, unsigned char **garray,
     //           unsigned char **barray)
-    // unsigned char **rarray;
-    // unsigned char **garray;
-    // unsigned char **barray;
+    unsigned char *rarray;
+    unsigned char *garray;
+    unsigned char *barray;
 
-    // unsigned long floor_width = 50;
-    // long floor_height = 50;
+    unsigned long floor_w;
+    long floor_h;
 
-    // bool val = bmp_read("textures/horizontal.bmp", &floor_width, &floor_height, rarray, garray, barray);
-    // std::cout << rarray << std::endl;
+    // if(!bmp_read("textures/horizontal.bmp", &floor_w, &floor_h, &rarray, &garray, &barray)){
+    //     std::cout << "Floor texture was sucessfully read!\n" << std::endl;
+    // } else {
+    //     std::cout << "Something went wrong while reading the texture" << std::endl;
+    // }
+
+    if(!bmp_read("textures/horizontal.bmp", &floor_w, &floor_h, &rarray, &garray, &barray)){
+        std::cout << "Floor texture was sucessfully read!\n" << std::endl;
+    } else {
+        std::cout << "Something went wrong while reading the texture" << std::endl;
+    }
 
     // Define materials for shading.
+    Material floor_texture(floor_w, floor_h, rarray, garray, barray);
     Material chrome(Color(0.25, 0.25,	0.25), Color(0.4, 0.4, 0.4),
                   Color(0.774597, 0.774597, 0.774597), 76.8);
     Material gold(Color(0.3, 0.3, 0.3), Color(0.75164, 0.60648, 0.22648),
@@ -54,6 +64,7 @@ int main(int argc, char *argv[]) {
 
     // Add a unit sphere and square into the scene with material mat.
     SceneNode *gold_sphere = new SceneNode(new UnitSphere(), &gold);
+    // SceneNode *gold_sphere = new SceneNode(new UnitSphere(), &sun_texture);
     scene.push_back(gold_sphere);
     SceneNode *plane = new SceneNode(new UnitSquare(), &jade);
     scene.push_back(plane);
@@ -71,8 +82,8 @@ int main(int argc, char *argv[]) {
     scene.push_back(wall1);
     wall1->mat->reflective = true;
 
-    // SceneNode *wall2 = new SceneNode(new UnitSquare(), &jade);
-    // scene.push_back(wall2);
+    SceneNode *wall2 = new SceneNode(new UnitSquare(), &floor_texture);
+    scene.push_back(wall2);
 
     // SceneNode *wall3 = new SceneNode(new UnitSquare(), &jade);
     // scene.push_back(wall3);
@@ -106,7 +117,10 @@ int main(int argc, char *argv[]) {
     wall1->translate(Vector3D(0, 3, -7));
     wall1->scale(Point3D(0, 0, 0), factor2);
     wall1->rotate('x', 45);
-    // wall2->translate(Vector3D(3,0, -5));
+    
+    wall2->translate(Vector3D(5 ,0, -5));
+    wall2->scale(Point3D(0, 0, 0), factor2);
+    wall2->rotate('y', 90);
     // wall3->translate(Vector3D(5,5,-5));
 
     // Render the scene, feel free to make the image smaller for
