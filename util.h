@@ -131,7 +131,10 @@ struct Material {
               reflective = 1.0;
               refractive = false;
               glossy = false;
+              has_texture = false;
           }
+    Material(unsigned long int width, long int height, unsigned char *rarray, unsigned char *garray, unsigned char *barray):
+        width(width), height(height), rarray(rarray), garray(garray), barray(barray), has_texture(true) {}
 
     // Ambient components for Phong shading.
     Color ambient;
@@ -141,14 +144,19 @@ struct Material {
     Color specular;
     // Specular exponent.
     double specular_exp;
-
     bool reflective;
-
     double refractive;
-
     bool glossy;
-
     double transparency;
+
+    // Texture variables
+    bool has_texture;
+    unsigned long int width;
+    long int height;
+    unsigned char *rarray;
+    unsigned char *garray;
+    unsigned char *barray;
+
 };
 
 struct Intersection {
@@ -165,6 +173,7 @@ struct Intersection {
     double t_value;
     // Set to true when no intersection has occured.
     bool none;
+
 };
 
 // Ray structure.
@@ -182,6 +191,10 @@ struct Ray3D {
     // Current colour of the ray, should be computed by the shading
     // function.
     Color col;
+
+    // Texture coordinates
+    double tex_u;
+    double tex_v;
 };
 
 struct Camera {
