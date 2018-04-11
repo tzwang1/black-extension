@@ -31,18 +31,18 @@ Vector3D computeGlossyVector(Ray3D ray, Vector3D N, Vector3D R, double roughness
     v.normalize();
 
     // choose uniformly sampled random direction
-    // double theta = 2 * M_PI * ((rand() / ((double)RAND_MAX)) * roughness);
-    // double phi = 2 * M_PI * ((rand() / ((double)RAND_MAX)) * roughness);
-    // double x = sin(theta) * cos(phi);
-    // double y = sin(theta) * sin(phi);
-    // double z = cos(theta);
+    double theta = 2 * M_PI * ((rand() / ((double)RAND_MAX)) * roughness);
+    double phi = 2 * M_PI * ((rand() / ((double)RAND_MAX)) * roughness);
+    double x = sin(theta) * cos(phi);
+    double y = sin(theta) * sin(phi);
+    double z = cos(theta);
 
-    double theta = pow(acos(1 - ((rand())/((double)RAND_MAX))),ray.intersection.mat->reflective_index);
-    double phi = 2*M_PI*((rand() / ((double)RAND_MAX)));
+    // double theta = pow(acos(1 - ((rand())/((double)RAND_MAX))),ray.intersection.mat->reflective_index);
+    // double phi = 2*M_PI*((rand() / ((double)RAND_MAX)));
 
-    double x = sin(phi) * cos(theta);
-    double y = sin(phi) * sin(theta);
-    double z = cos(phi);
+    // double x = sin(phi) * cos(theta);
+    // double y = sin(phi) * sin(theta);
+    // double z = cos(phi);
 
     Vector3D newR = x * u + y * v + z * R;
     newR.normalize();
@@ -98,6 +98,42 @@ void Raytracer::computeShading(Ray3D &ray, LightList &light_list, Scene &scene) 
     }
 }
 
+void Raytracer::computeShadingSoft(Ray3D &ray, LightList &light_list, Scene &scene) {
+    // radius of extended light source
+    double radius = 2.0;
+    int num_rays = 1;
+    Color col(0.0, 0.0, 0.0);
+    double rays_blocked = 0;
+    // std::cout<<light_list.size()<<std::endl;
+    for (size_t i = 0; i < light_list.size(); ++i) {
+        LightSource *light = light_list[i];
+        for(int i = 0; i < num_rays; i++) {
+            double r = radius * (rand() / (double)RAND_MAX);
+            double theta = 2 * M_PI * (rand() / (double)RAND_MAX);
+            double phi = 2 * M_PI * (rand() / (double)RAND_MAX);
+            // std::cout<< r << std::endl;
+
+            Point3D randomLightPos = light->get_position() + Vector3D(r*cos(theta) * sin(phi),
+                                                                    r*cos(theta) * sin(phi),
+                                                                    r*cos(phi));
+            // std::cout << randomLightPos << std::endl;
+            Vector3D shadowDir = randomLightPos - ray.intersection.point;
+            shadowDir.normalize();
+            Point3D shadow_origin = ray.intersection.point + ERR * shadowDir;
+            Ray3D shadow_ray(shadow_origin,shadowDir);
+
+            traverseScene(scene, shadow_ray);
+
+            if(shadow_ray.intersection.none){
+                light->shade(ray);
+                // col = col + ray.col;
+                rays_blocked++;
+            }
+        }
+    }
+    ray.col = (1.0/(num_rays * light_list.size())) * rays_blocked * ray.col;
+}
+
 Color Raytracer::shadeRay(Ray3D &ray, Scene &scene, LightList &light_list, int num_reflect) {
     Color col(0.0, 0.0, 0.0);
     traverseScene(scene, ray);
@@ -109,8 +145,10 @@ Color Raytracer::shadeRay(Ray3D &ray, Scene &scene, LightList &light_list, int n
         return col;
     }
     if (!ray.intersection.none) {
-        computeShading(ray, light_list, scene);
-        col = col + ray.intersection.mat->transparency * ray.col;
+        // computeShading(ray, light_list, scene);
+        computeShadingSoft(ray, light_list, scene);
+        col = ray.col;
+        // col = col + ray.intersection.mat->transparency * ray.col;
     }
     // You'll want to call shadeRay recursively (with a different ray,
     // of course) here to implement reflection/refraction effects.
@@ -134,15 +172,18 @@ Color Raytracer::shadeRay(Ray3D &ray, Scene &scene, LightList &light_list, int n
             if (ray.intersection.mat->glossy) {
                 // Glossy reflection
                 double num_glossy = 20;
-                for (size_t i = 0; i < num_glossy; i++) {
+                for (int i = 0; i < num_glossy; i++) {
                     // compute new direction for glossy reflection
                     new_ray.dir = computeGlossyVector(ray, normal, reflect_dir, 0.0);
                     new_ray.origin = ray.intersection.point + ERR * new_ray.dir;
                     num_reflect++;
-                    new_color = new_color + 1.0 / num_glossy * shadeRay(new_ray, scene, light_list, num_reflect);
+                    // new_color = new_color + 1.0 / num_glossy * shadeRay(new_ray, scene, light_list, num_reflect);
+                    new_color = new_color + shadeRay(new_ray, scene, light_list, num_reflect);
                 }
+                new_color = 1.0 / num_glossy * new_color;
                 new_ray.col = new_color;
                 col = col + intersect.mat->transparency * intersect.mat->specular * new_ray.col;
+                // num_reflect++;
             } else {
                 num_reflect++;
                 new_ray.col = shadeRay(new_ray, scene, light_list, num_reflect);
@@ -192,7 +233,7 @@ void Raytracer::renderAntiAliasDoF(Camera &camera, Scene &scene, LightList &ligh
                     ray.dir.normalize();
 
                     // Adding colors together
-                    // color = color + shadeRay(ray, scene, light_list, 0);
+                    color = color + shadeRay(ray, scene, light_list, 0);
 
                     double focal_len = 10.0;
                     double apeture_size = 0.5;

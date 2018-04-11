@@ -125,6 +125,16 @@ void renderNonTexturedScene(int width, int height){
     PointLight *pLight = new PointLight(Point3D(0, 0, 5), Color(0.9, 0.9, 0.9));
     light_list.push_back(pLight);
 
+    // PointLight *pLight2 = new PointLight(Point3D(3, 1, 5), Color(0.9, 0.9, 0.9));
+    // light_list.push_back(pLight2);
+
+    // PointLight *pLight3 = new PointLight(Point3D(4, 2, 5), Color(0.9, 0.9, 0.9));
+    // light_list.push_back(pLight3);
+
+    // PointLight *pLight4 = new PointLight(Point3D(1, 3, 7), Color(0.9, 0.9, 0.9));
+    // light_list.push_back(pLight4);
+
+
     // Add a unit sphere and square into the scene with material mat.
     SceneNode *gold_sphere = new SceneNode(new UnitSphere(), &gold);
     scene.push_back(gold_sphere);
@@ -137,22 +147,25 @@ void renderNonTexturedScene(int width, int height){
     scene.push_back(chrome_sphere);
 
     // // Add a cylinder
-    SceneNode *copper_cylinder = new SceneNode(new UnitCylinder(), &copper);
-    scene.push_back(copper_cylinder);
+    // SceneNode *copper_cylinder = new SceneNode(new UnitCylinder(), &copper);
+    // scene.push_back(copper_cylinder);
 
-    SceneNode *wall1 = new SceneNode(new UnitSquare(), &jade);
-    scene.push_back(wall1);
+    // SceneNode *wall1 = new SceneNode(new UnitSquare(), &jade);
+    // scene.push_back(wall1);
 
     // Apply some transformations to the gold sphere
     double factor1[3] = {1.0, 1.0, 1.0};
-    gold_sphere->translate(Vector3D(-4, 2, -5));
+    gold_sphere->translate(Vector3D(-3, 2, -5));
     gold_sphere->rotate('x', -45);
     gold_sphere->scale(Point3D(0, 0, 0), factor1);
     gold_sphere->mat->reflective = false;
-    gold_sphere->mat->glossy = true;
+    gold_sphere->mat->reflective_index = 1.0;
+    gold_sphere->mat->refractive = false;
+    gold_sphere->mat->refractive_index = 1.3;
+    // gold_sphere->mat->glossy = true;
 
     // Apply some transformations to the floor
-    double factor2[3] = {20.0, 20.0, 10.0};
+    double factor2[3] = {10.0, 10.0, 10.0};
     plane->translate(Vector3D(0, 0, -7));
     plane->scale(Point3D(0, 0, 0), factor2);
     plane->mat->reflective = true;
@@ -161,26 +174,27 @@ void renderNonTexturedScene(int width, int height){
     double factor3[3] = {2.0, 2.0, 2.0};
     chrome_sphere->translate(Vector3D(1, 0, -6));
     chrome_sphere->scale(Point3D(0, 0, 0), factor1);
-    chrome_sphere->mat->reflective = true;
+    chrome_sphere->mat->reflective = false;
     chrome_sphere->mat->reflective_index = 1.0;
     chrome_sphere->mat->refractive = true;
     chrome_sphere->mat->refractive_index = 1.3;
-    chrome_sphere->mat->glossy = true;
+    // chrome_sphere->mat->glossy = true;
     chrome_sphere->mat->transparency = 0.5;
     
     // Apply some transformations to the gold cylinder
-    copper_cylinder->translate(Vector3D(-2, -2, -6));
-    copper_cylinder->mat->reflective = false;
-    copper_cylinder->mat->glossy = true;
-    copper_cylinder->scale(Point3D(0, 0, 0), factor1);
+    // double factor5[3] = {0.8, 0.8, 4.0};
+    // copper_cylinder->translate(Vector3D(-2, -2, -6));
+    // copper_cylinder->mat->reflective = false;
+    // copper_cylinder->mat->glossy = false;
+    // copper_cylinder->scale(Point3D(0, 0, 0), factor5);
 
     // Apply some transformations to the wall
-    double factor4[3] = {5.0, 5.0, 5.0};
-    wall1->rotate('x', 45);
-    wall1->translate(Vector3D(0, 5, -6));
-    wall1->scale(Point3D(0,0,0), factor2);
-    wall1->mat->reflective = true;
-    wall1->mat->glossy = false;
+    // double factor4[3] = {5.0, 5.0, 5.0};
+    // wall1->rotate('x', 45);
+    // wall1->translate(Vector3D(0, 5, -6));
+    // wall1->scale(Point3D(0,0,0), factor2);
+    // wall1->mat->reflective = true;
+    // wall1->mat->glossy = false;
 
     // Render the scene, feel free to make the image smaller for
     // testing purposes.
@@ -195,7 +209,7 @@ void renderNonTexturedScene(int width, int height){
     Camera camera2(Point3D(4, 2, 1), Vector3D(-4, -2, -7), Vector3D(0, 1, 0),
                    60.0);
     Image image2(width, height);
-    raytracer.render(camera2, scene, light_list, image2);
+    raytracer.renderAntiAliasDoF(camera2, scene, light_list, image2);
     image2.flushPixelBuffer("image2.bmp");
 
     // Camera camera3(Point3D(7,0,10), Vector3D(-1, 2, -5), Vector3D(0, 1, 0),
@@ -207,7 +221,7 @@ void renderNonTexturedScene(int width, int height){
     // Camera camera4(Point3D(2,3,2), Vector3D(-1, -2, -1), Vector3D(0, 1, 0),
     //                 70.0);
     // Image image4(width, height);
-    // raytracer.renderAntiAliasDoF(camera3, scene, light_list, image4);
+    // raytracer.renderAntiAliasDoF(camera2, scene, light_list, image4);
     // image4.flushPixelBuffer("image4.bmp");
 
     // Free memory

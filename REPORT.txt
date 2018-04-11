@@ -1,0 +1,12 @@
+We implemented anti-aliasing, depth of field, texture mapping, soft shadows, 
+and handling a non-trivial compound object (cylinder).
+
+Our main.cpp is separated into two functions, renderTexturedScene, which will render texture mapped images
+objects (plane, sphere, cube), and renderNonTexturedScene, which will render the other part 2 features,
+(Depth of field, anti-aliasing, softshadows, cylinder).
+
+For texture mapping we added char pointers to the material struct to store the red, green, and blue values
+of bitmaps we read in. We then map the coordinates in the bitmap to the object using U, V coordinates
+that were specified in our object intersection code.
+
+For anti-aliasing we split each pixel into 25 
