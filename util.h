@@ -136,8 +136,10 @@ struct Material {
     Material(unsigned long int width, long int height, unsigned char *rarray, unsigned char *garray, unsigned char *barray):
         width(width), height(height), rarray(rarray), garray(garray), barray(barray) {
             transparency = 1.0;
-            reflective = 1.0;
+            reflective = false;
             refractive = false;
+            reflective_index = 1.0;
+            refractive_index = 1.0;
             glossy = false;
             has_texture = true;
         }
@@ -153,7 +155,9 @@ struct Material {
     // Specular exponent.
     double specular_exp;
     bool reflective;
-    double refractive;
+    double reflective_index;
+    bool refractive;
+    double refractive_index;
     bool glossy;
     double transparency;
 

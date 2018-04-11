@@ -16,11 +16,11 @@
 using namespace std;
 
 
-const int MAX_REFLECT = 1;
+const int MAX_REFLECT = 3;
 const double ERR = 1e-3;
 
 
-Vector3D computeGlossyVector(Vector3D N, Vector3D R, double roughness) {
+Vector3D computeGlossyVector(Ray3D ray, Vector3D N, Vector3D R, double roughness) {
 
     // orthonormal basis at intersection point
     Vector3D u = R.cross(N);
@@ -31,11 +31,18 @@ Vector3D computeGlossyVector(Vector3D N, Vector3D R, double roughness) {
     v.normalize();
 
     // choose uniformly sampled random direction
-    double theta = 2 * M_PI * ((rand() / ((double)RAND_MAX)) * roughness);
-    double phi = 2 * M_PI * ((rand() / ((double)RAND_MAX)) * roughness);
-    double x = sin(theta) * cos(phi);
-    double y = sin(theta) * sin(phi);
-    double z = cos(theta);
+    // double theta = 2 * M_PI * ((rand() / ((double)RAND_MAX)) * roughness);
+    // double phi = 2 * M_PI * ((rand() / ((double)RAND_MAX)) * roughness);
+    // double x = sin(theta) * cos(phi);
+    // double y = sin(theta) * sin(phi);
+    // double z = cos(theta);
+
+    double theta = pow(acos(1 - ((rand())/((double)RAND_MAX))),ray.intersection.mat->reflective_index);
+    double phi = 2*M_PI*((rand() / ((double)RAND_MAX)));
+
+    double x = sin(phi) * cos(theta);
+    double y = sin(phi) * sin(theta);
+    double z = cos(phi);
 
     Vector3D newR = x * u + y * v + z * R;
     newR.normalize();
@@ -84,25 +91,10 @@ void Raytracer::computeShading(Ray3D &ray, LightList &light_list, Scene &scene) 
         traverseScene(scene, shadow_ray);
 
         if (shadow_ray.intersection.none) {
-            // if(ray.intersection.mat->has_texture){
-            //     // printf("Setting texture color\n");
-            //     Color texture_color = textureColor(ray);
-            //     ray.col = ray.col + texture_color;
-            // } else {
-            //     light->shade(ray);
-            // }
             light->shade(ray);
         } else {
-            // if(ray.intersection.mat->has_texture){
-            //     // printf("Setting texture color2\n");
-            //     ray.col = textureColor(ray);
-            // } else {
-            //     ray.col = ray.col + ray.intersection.mat->ambient * light->get_ambient();
-            // }
             ray.col = ray.col + ray.intersection.mat->ambient * light->get_ambient();
         }
-
-        // ray.col.clamp();
     }
 }
 
@@ -125,7 +117,6 @@ Color Raytracer::shadeRay(Ray3D &ray, Scene &scene, LightList &light_list, int n
 
     // Reflect a ray MAX_REFLECT number of times
     if (!ray.intersection.none && ray.intersection.mat->reflective) {
-        // printf("Reflecting");
         if (num_reflect < MAX_REFLECT) {
             Intersection intersect = ray.intersection;
             Vector3D normal = intersect.normal;
@@ -142,12 +133,13 @@ Color Raytracer::shadeRay(Ray3D &ray, Scene &scene, LightList &light_list, int n
             
             if (ray.intersection.mat->glossy) {
                 // Glossy reflection
-                for (size_t i = 0; i < 20; i++) {
+                double num_glossy = 20;
+                for (size_t i = 0; i < num_glossy; i++) {
                     // compute new direction for glossy reflection
-                    new_ray.dir = computeGlossyVector(normal, reflect_dir, 0.0);
-                    new_ray.origin = ray.intersection.point + 0.001 * new_ray.dir;
+                    new_ray.dir = computeGlossyVector(ray, normal, reflect_dir, 0.0);
+                    new_ray.origin = ray.intersection.point + ERR * new_ray.dir;
                     num_reflect++;
-                    new_color = new_color + 1.0 / 20 * shadeRay(new_ray, scene, light_list, num_reflect);
+                    new_color = new_color + 1.0 / num_glossy * shadeRay(new_ray, scene, light_list, num_reflect);
                 }
                 new_ray.col = new_color;
                 col = col + intersect.mat->transparency * intersect.mat->specular * new_ray.col;
@@ -200,16 +192,15 @@ void Raytracer::renderAntiAliasDoF(Camera &camera, Scene &scene, LightList &ligh
                     ray.dir.normalize();
 
                     // Adding colors together
-                    color = color + shadeRay(ray, scene, light_list, 0);
+                    // color = color + shadeRay(ray, scene, light_list, 0);
 
-                    double focal_len = 5.0;
-                    double apeture_size = 1.0;
-                    int depth = 3;
+                    double focal_len = 10.0;
+                    double apeture_size = 0.5;
                     int dof_num = 20;
                     Color dofCol = Color(0.0, 0.0, 0.0);
                     for (int count = 0; count < 3; count++) {
                             Ray3D secondary_ray = computeDepthOfField(ray, origin, focal_len, apeture_size);
-                            dofCol = dofCol + shadeRay(secondary_ray, scene, light_list, depth);
+                            dofCol = dofCol + shadeRay(secondary_ray, scene, light_list, 0);
                     }
                     color = color + double(1.0/dof_num)*dofCol;
                 }
@@ -252,13 +243,13 @@ void Raytracer::renderDoF(Camera &camera, Scene &scene, LightList &light_list, I
             // Color col = shadeRay(ray, scene, light_list, 0);
         
             // Averaging colors by total number of samples taken
-            double focal_len = 5;
-            double apeture_size = 1.0;
+            double focal_len = 3.3;
+            double apeture_size = 0.2;
             int dof_num = 20;
             Color dofCol = Color(0.0, 0.0, 0.0);
             for (int count = 0; count < dof_num; count++) {
-                    Ray3D secondary_ray = computeDepthOfField(ray, origin, focal_len, apeture_size);
-                    dofCol = dofCol + shadeRay(secondary_ray, scene, light_list, 0);
+                Ray3D secondary_ray = computeDepthOfField(ray, origin, focal_len, apeture_size);
+                dofCol = dofCol + shadeRay(secondary_ray, scene, light_list, 0);
             }
             col = col + double(1.0/dof_num)*dofCol;
             col.clamp();
