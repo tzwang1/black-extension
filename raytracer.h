@@ -21,6 +21,10 @@ class Raytracer {
     // Renders 3D scene to an image given camera and lights setup.
     void render(Camera &camera, Scene &scene, LightList &light_list, Image &image);
 
+    void renderDoF(Camera &camera, Scene &scene, LightList &light_list, Image &image);
+
+    void renderAntiAliasDoF(Camera &camera, Scene &scene, LightList &light_list, Image &image);
+
   private:
     // Return the color of the ray after intersection and shading, call
     // this function recursively for reflection and refraction.

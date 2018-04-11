@@ -134,7 +134,15 @@ struct Material {
               has_texture = false;
           }
     Material(unsigned long int width, long int height, unsigned char *rarray, unsigned char *garray, unsigned char *barray):
-        width(width), height(height), rarray(rarray), garray(garray), barray(barray) {}
+        width(width), height(height), rarray(rarray), garray(garray), barray(barray) {
+            transparency = 1.0;
+            reflective = 1.0;
+            refractive = false;
+            glossy = false;
+            has_texture = true;
+        }
+    
+    Material(){}
 
     // Ambient components for Phong shading.
     Color ambient;

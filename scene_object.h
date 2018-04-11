@@ -69,6 +69,12 @@ class UnitSquare : public SceneObject {
                    const Matrix4x4 &modelToWorld);
 };
 
+class UnitCube : public SceneObject {
+    public:
+     bool intersect(Ray3D &ray, const Matrix4x4 &worldToModel,
+                   const Matrix4x4 &modelToWorld);
+};
+
 class UnitSphere : public SceneObject {
   public:
     bool intersect(Ray3D &ray, const Matrix4x4 &worldToModel,

@@ -100,6 +100,112 @@ bool UnitSquare::intersect(Ray3D &ray, const Matrix4x4 &worldToModel,
     return false;
 }
 
+bool UnitCube::intersect(Ray3D &ray, const Matrix4x4 &worldToModel,
+                         const Matrix4x4 &modelToWorld) {
+    // Intersect code for UnitCube, centered at the origin, with vertices at (1,0,0),
+    // (0,1,0), (0,0,1), (0,0,0), (1,1,1), (1,1,0), (1,0,1), (0,1,1)
+    // Transform the ray (origin, direction) to object spac
+    Point3D origin = worldToModel * ray.origin;
+    Vector3D direction = worldToModel * ray.dir;
+
+    //Calculate all intersections with the cube
+    double t_xmin = (0 - origin[0])/direction[0];
+    double t_xmax = (1 - origin[0])/direction[0];
+
+    double t_ymin = (0 - origin[1])/direction[1];
+    double t_ymax = (1 - origin[1])/direction[1];
+
+    double t_zmin = (0 - origin[2])/direction[2];
+    double t_zmax = (1 - origin[2])/direction[2];
+
+    //Swap the values if necessary
+    if(t_xmin > t_xmax){
+        std::swap(t_xmin, t_xmax);
+    }
+
+    if(t_ymin > t_ymax){
+        std::swap(t_ymin, t_ymax);
+    }
+    
+    if(t_zmin > t_zmax){
+        std::swap(t_zmin, t_zmax);
+    }
+
+    // Return if the ray doesn't intersect
+    if(t_xmin > t_ymax || t_ymin > t_xmax){
+        return false;
+    }
+    double t_min;
+    double t_max;
+    if(t_ymin > t_xmin) {
+        t_min = t_ymin;
+    } else {
+        t_min = t_xmin;
+    }
+
+    if(t_ymax < t_xmax) {
+        t_max = t_ymax;
+    } else {
+        t_max = t_xmax;
+    }
+
+    // Return if the ray doesn't intersect
+    if(t_min > t_zmax || t_zmin > t_max) {
+        return false;
+    }
+
+    if(t_zmin > t_min) {
+        t_min = t_zmin;
+    }
+
+    if(t_zmax < t_max) {
+        t_max = t_zmax;
+    }
+
+    double t = t_min;
+    if(t < 0){
+        return false;
+    }
+
+    if(ray.intersection.none || t < ray.intersection.t_value){
+        // std::cout << "Found intersection" << std::endl;
+        Point3D point = origin + t * direction;
+        Vector3D normal;
+        if(abs(1 - int(point[0])) < 1e-3) {
+            normal = Vector3D(1.0, 0.0, 0.0);
+            ray.intersection.tex_u = point[1];
+            ray.intersection.tex_v = point[2];
+        // } else if(abs(0 - int(point[0])) < 1e-3) {
+        //     normal = Vector3D(-1.0, 0.0, 0.0);
+        //     // ray.intersection.tex_u = point[0];
+        //     // ray.intersection.tex_v = point[0];
+        } else if(abs(1 - int(point[1])) < 1e-3) {
+            normal = Vector3D(0.0, 1.0, 0.0);
+            ray.intersection.tex_u = point[0];
+            ray.intersection.tex_v = point[2];
+        // } else if(abs(0 - int(point[1])) < 1e-3) {
+        //     normal = Vector3D(0.0, -1.0, 0.0);
+        //     // ray.intersection.tex_u = point[0];
+        //     // ray.intersection.tex_v = point[2];
+        } else if(abs(1 - int(point[2])) < 1e-3) {
+            normal = Vector3D(0.0, 0.0, 1.0);
+            ray.intersection.tex_u = point[0];
+            ray.intersection.tex_v = point[1];
+        // } else if(abs(0 - int(point[2])) < 1e-3) {
+        //     normal = Vector3D(0.0, 0.0, -1.0);
+        //     // ray.intersection.tex_u = point[0];
+        //     // ray.intersection.tex_v = point[1];
+        } else {
+            // std::cout << "Something went wrong... this is what the point looks like" << std::endl;
+            // std::cout << point << std::endl;
+            // return false;
+        }
+        set_intersect_values(ray, t, normal, point, worldToModel, modelToWorld);
+        return true;
+    }  
+    return false;
+}
+
 bool UnitSphere::intersect(Ray3D &ray, const Matrix4x4 &worldToModel,
                            const Matrix4x4 &modelToWorld) {
     // TODO: implement intersection code for UnitSphere, which is centred
@@ -136,8 +242,8 @@ bool UnitSphere::intersect(Ray3D &ray, const Matrix4x4 &worldToModel,
     if (ray.intersection.none || t < ray.intersection.t_value) {
         set_intersect_values(ray, t, normal, point, worldToModel, modelToWorld);
         Vector3D n = ray.intersection.normal;
-        // ray.intersection.tex_u = (atan2(n[0], n[2])/(2*M_PI)) + 0.5;
-        // ray.intersection.tex_v = n[1] * 0.5 + 0.5;
+        ray.intersection.tex_u = (atan2(n[0], n[2])/(2*M_PI)) + 0.5;
+        ray.intersection.tex_v = n[1] * 0.5 + 0.5;
         return true;
     }
 
