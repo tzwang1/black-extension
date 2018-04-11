@@ -148,8 +148,8 @@ void renderNonTexturedScene(int width, int height){
     gold_sphere->translate(Vector3D(-4, 2, -5));
     gold_sphere->rotate('x', -45);
     gold_sphere->scale(Point3D(0, 0, 0), factor1);
-    gold_sphere->mat->reflective = false;
-    gold_sphere->mat->glossy = true;
+    gold_sphere->mat->reflective = true;
+    gold_sphere->mat->glossy = false;
 
     // Apply some transformations to the floor
     double factor2[3] = {20.0, 20.0, 10.0};
@@ -162,16 +162,14 @@ void renderNonTexturedScene(int width, int height){
     chrome_sphere->translate(Vector3D(1, 0, -6));
     chrome_sphere->scale(Point3D(0, 0, 0), factor1);
     chrome_sphere->mat->reflective = true;
-    chrome_sphere->mat->reflective_index = 1.0;
-    chrome_sphere->mat->refractive = true;
-    chrome_sphere->mat->refractive_index = 1.3;
     chrome_sphere->mat->glossy = true;
-    chrome_sphere->mat->transparency = 0.5;
+    chrome_sphere->mat->roughness = 0.2;
     
     // Apply some transformations to the gold cylinder
     copper_cylinder->translate(Vector3D(-2, -2, -6));
-    copper_cylinder->mat->reflective = false;
+    copper_cylinder->mat->reflective = true;
     copper_cylinder->mat->glossy = true;
+    copper_cylinder->mat->roughness = 0.4;
     copper_cylinder->scale(Point3D(0, 0, 0), factor1);
 
     // Apply some transformations to the wall

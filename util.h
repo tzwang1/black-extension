@@ -125,26 +125,26 @@ std::ostream &operator<<(std::ostream &o, const Color &c);
 
 struct Material {
     Material(Color ambient, Color diffuse, Color specular, double exp)
-        : ambient(ambient), diffuse(diffuse), specular(specular),
-          specular_exp(exp) {
-              transparency = 1.0;
-              reflective = 1.0;
-              refractive = false;
-              glossy = false;
-              has_texture = false;
-          }
-    Material(unsigned long int width, long int height, unsigned char *rarray, unsigned char *garray, unsigned char *barray):
-        width(width), height(height), rarray(rarray), garray(garray), barray(barray) {
-            transparency = 1.0;
-            reflective = false;
-            refractive = false;
-            reflective_index = 1.0;
-            refractive_index = 1.0;
-            glossy = false;
-            has_texture = true;
-        }
-    
-    Material(){}
+        : ambient(ambient), diffuse(diffuse), specular(specular), specular_exp(exp) {
+        transparency = 1.0;
+        reflective = 1.0;
+        refractive = false;
+        glossy = false;
+        has_texture = false;
+    }
+    Material(unsigned long int width, long int height, unsigned char *rarray, unsigned char *garray,
+             unsigned char *barray)
+        : width(width), height(height), rarray(rarray), garray(garray), barray(barray) {
+        transparency = 1.0;
+        reflective = false;
+        refractive = false;
+        reflective_index = 1.0;
+        refractive_index = 1.0;
+        glossy = false;
+        has_texture = true;
+    }
+
+    Material() {}
 
     // Ambient components for Phong shading.
     Color ambient;
@@ -168,7 +168,7 @@ struct Material {
     unsigned char *rarray;
     unsigned char *garray;
     unsigned char *barray;
-
+    double roughness;
 };
 
 struct Intersection {
@@ -189,15 +189,12 @@ struct Intersection {
     // Texture coordinates
     double tex_u;
     double tex_v;
-
 };
 
 // Ray structure.
 struct Ray3D {
     Ray3D() { intersection.none = true; }
-    Ray3D(Point3D p, Vector3D v) : origin(p), dir(v) {
-        intersection.none = true;
-    }
+    Ray3D(Point3D p, Vector3D v) : origin(p), dir(v) { intersection.none = true; }
     // Origin and direction of the ray.
     Point3D origin;
     Vector3D dir;
@@ -251,8 +248,7 @@ struct Image {
 
     // Create an image with dimensions (width, height)
     Image(int width, int height)
-        : width(width), height(height), rbuffer(NULL), gbuffer(NULL),
-          bbuffer(NULL) {
+        : width(width), height(height), rbuffer(NULL), gbuffer(NULL), bbuffer(NULL) {
         initPixelBuffer();
     }
 
