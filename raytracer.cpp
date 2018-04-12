@@ -15,10 +15,13 @@
 #include <iostream>
 using namespace std;
 
-const int MAX_REFLECT = 3;
+const int MAX_REFLECT = 1;
 const double ERR = 1e-3;
 
-double myrand() { return rand() / ((double)RAND_MAX); }
+double myrand() {
+    // Helper functio for computing random value between 0..1
+    return rand() / ((double)RAND_MAX); 
+}
 
 void Raytracer::traverseScene(Scene &scene, Ray3D &ray) {
     for (size_t i = 0; i < scene.size(); ++i) {
@@ -142,49 +145,26 @@ Color Raytracer::shadeRay(Ray3D &ray, Scene &scene, LightList &light_list, int n
         // Glossy implementation reflection from tutorial
         if (intersect.mat->glossy) {
             double roughness = intersect.mat->roughness;
+            // Orthogonal basis at intersection point
+            Vector3D u = reflect_dir.cross(normal);
+            u.normalize();
+            Vector3D v = reflect_dir.cross(u);
+            v.normalize();
+            
+            // Uniformly sample random directions and send the ray in
+            double theta = 2 * M_PI * ((myrand() * roughness));
+            double phi = 2 * M_PI * ((myrand() * roughness));
+            double x = sin(theta) * cos(phi);
+            double y = sin(theta) * sin(phi);
+            double z = cos(theta);
 
-            int n = 10;
-            for (size_t i = 0; i < n; ++i) {
-                // Orthogonal basis at intersection point
-                Vector3D u = reflect_dir.cross(normal);
-                u.normalize();
-                Vector3D v = reflect_dir.cross(u);
-                v.normalize();
-                
-                // Uniformly sample random directions and send the ray in
-                double theta = 2 * M_PI * ((myrand() * roughness));
-                double phi = 2 * M_PI * ((myrand() * roughness));
-                double x = sin(theta) * cos(phi);
-                double y = sin(theta) * sin(phi);
-                double z = cos(theta);
-
-                // Convert sample to world using orthogonal basis
-                reflect_dir = x * u + y * v + z * reflect_dir;
-                reflect_dir.normalize();
-                reflect_origin = intersect.point + ERR * reflect_dir;
-                reflect_ray.dir = reflect_dir;
-                reflect_ray.origin = reflect_origin;
-                reflect_color =
-                    reflect_color +
-                    (1.0 / (2*n)) * shadeRay(reflect_ray, scene, light_list, num_reflect+1);
-            }
-
-            // Vector3D u = reflect_dir.cross(normal);
-            // u.normalize();
-            // Vector3D v = reflect_dir.cross(u);
-            // v.normalize();
-            // double theta = 2 * M_PI * ((myrand() * roughness));
-            // double phi = 2 * M_PI * ((myrand() * roughness));
-            // double x = sin(theta) * cos(phi);
-            // double y = sin(theta) * sin(phi);
-            // double z = cos(theta);
-
-            // reflect_dir = x * u + y * v + z * reflect_dir;
-            // reflect_dir.normalize();
-            // reflect_origin = intersect.point + ERR * normal;
-            // reflect_ray.dir = reflect_dir;
-            // reflect_ray.origin = reflect_origin;
-            // reflect_color = reflect_color + shadeRay(reflect_ray, scene, light_list, num_reflect + 1);
+            // Convert sample to world using orthogonal basis
+            reflect_dir = x * u + y * v + z * reflect_dir;
+            reflect_dir.normalize();
+            reflect_origin = intersect.point + ERR * reflect_dir;
+            reflect_ray.dir = reflect_dir;
+            reflect_ray.origin = reflect_origin;
+            reflect_color = reflect_color + shadeRay(reflect_ray, scene, light_list, num_reflect+1);
         } else {
             // Prevent infinite recursion by +1 to num_reflect
             reflect_color = shadeRay(reflect_ray, scene, light_list, num_reflect + 1);
@@ -328,17 +308,14 @@ void Raytracer::render(Camera &camera, Scene &scene, LightList &light_list, Imag
 }
 
 Ray3D Raytracer::computeDepthOfField(Ray3D &ray, Point3D &origin, double F, double R) {
+    // As the name suggests, compute DOF
     double normalizer = double(RAND_MAX);
-    // F = focal
-    // R = aperture
-    // focal point
     Point3D fp = origin + F * ray.dir;
 
     // random point on lens
     double rand1 = R * (2 * (rand() / normalizer) - 1);
     double rand2 = R * (2 * (rand() / normalizer) - 1);
-    // std::cout << rand1 << std::endl;
-    // std::cout <<rand2 << std::endl;
+
     Point3D secondary_ray_point = origin + Vector3D(rand1, rand2, 0.0);
 
     // compute result
@@ -349,6 +326,7 @@ Ray3D Raytracer::computeDepthOfField(Ray3D &ray, Point3D &origin, double F, doub
 }
 
 Color Raytracer::textureColor(Ray3D &ray) {
+    // Set the color of a ray based on texture
     if (!ray.intersection.none && ray.intersection.mat->has_texture) {
         int width = ray.intersection.mat->width;
         int height = ray.intersection.mat->height;
