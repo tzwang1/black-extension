@@ -5,6 +5,7 @@
         
 
 
+
         This file contains the interface and datastructures of the raytracer.
         Simple traversal and addition code to the datastructures are given to
 you.
@@ -40,7 +41,6 @@ class Raytracer {
 
     void computeShadingSoft(Ray3D &ray, LightList &light_list, Scene &scene);
 
-
     Color computeColor(Ray3D &ray, LightSource *light, Scene &scene, int n, float k);
 
     // Precompute the modelToWorld and worldToModel transformations for each
@@ -52,5 +52,5 @@ class Raytracer {
 
     Color textureColor(Ray3D &ray);
     // Soft shadow
-    Color computeSoftShadow(Ray3D& ray, Scene& scene, LightList& light_list, int grid_size);
+    Color computeSoftShadow(Ray3D &ray, Scene &scene, LightList &light_list, int grid_size);
 };

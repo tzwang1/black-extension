@@ -15,7 +15,7 @@
 #include <iostream>
 using namespace std;
 
-const int MAX_REFLECT = 1;
+const int MAX_REFLECT = 3;
 const double ERR = 1e-3;
 
 double myrand() { return rand() / ((double)RAND_MAX); }
@@ -43,78 +43,65 @@ void Raytracer::computeTransforms(Scene &scene) {
     }
 }
 
-// void Raytracer::computeShading(Ray3D &ray, LightList &light_list, Scene &scene) {
-
-//     for (size_t i = 0; i < light_list.size(); ++i) {
-//         LightSource *light = light_list[i];
-
-//         // Each lightSource provides its own shading function.
-//         // Implement shadows here if needed.
-
-//         Vector3D shadow_dir = light->get_position() - ray.intersection.point;
-//         shadow_dir.normalize();
-//         Point3D shadow_origin = ray.intersection.point + ERR * shadow_dir;
-//         // Point3D shadow_origin = ray.intersection.point;
-
-//         Ray3D shadow_ray(shadow_origin, shadow_dir);
-
-//         // Find intersections with ray
-//         traverseScene(scene, shadow_ray);
-
-//         if (shadow_ray.intersection.none) {
-//             light->shade(ray);
-//         }
-//         // else {
-//         //     ray.col = ray.col + ray.intersection.mat->ambient * light->get_ambient();
-//         // }
-//     }
-// }
-
-
 void Raytracer::computeShading(Ray3D &ray, LightList &light_list, Scene &scene) {
+    // This is the hard shadow implementation
     for (size_t i = 0; i < light_list.size(); ++i) {
         LightSource *light = light_list[i];
 
         // Each lightSource provides its own shading function.
         // Implement shadows here if needed.
-        light->shade(ray);
+
+        Vector3D shadow_dir = light->get_position() - ray.intersection.point;
+        shadow_dir.normalize();
+        Point3D shadow_origin = ray.intersection.point + ERR * shadow_dir;
+        // Point3D shadow_origin = ray.intersection.point;
+
+        Ray3D shadow_ray(shadow_origin, shadow_dir);
+
+        // Find intersections with ray
+        traverseScene(scene, shadow_ray);
+
+        if (shadow_ray.intersection.none) {
+            light->shade(ray);
+        } else {
+            ray.col = ray.intersection.mat->ambient * light->get_ambient();
+        }
     }
 }
 
 void Raytracer::computeShadingSoft(Ray3D &ray, LightList &light_list, Scene &scene) {
+    // Soft shadow implementation
     // radius of extended light source
     double radius = 2.0;
     int num_rays = 1;
     Color col(0.0, 0.0, 0.0);
     double rays_blocked = 0;
-    // std::cout<<light_list.size()<<std::endl;
+
     for (size_t i = 0; i < light_list.size(); ++i) {
         LightSource *light = light_list[i];
-        for(int i = 0; i < num_rays; i++) {
+        for (int i = 0; i < num_rays; i++) {
             double r = radius * (rand() / (double)RAND_MAX);
             double theta = 2 * M_PI * (rand() / (double)RAND_MAX);
             double phi = 2 * M_PI * (rand() / (double)RAND_MAX);
-            // std::cout<< r << std::endl;
 
-            Point3D randomLightPos = light->get_position() + Vector3D(r*cos(theta) * sin(phi),
-                                                                    r*cos(theta) * sin(phi),
-                                                                    r*cos(phi));
-            // std::cout << randomLightPos << std::endl;
+            Point3D randomLightPos =
+                light->get_position() +
+                Vector3D(r * cos(theta) * sin(phi), r * cos(theta) * sin(phi), r * cos(phi));
+
             Vector3D shadowDir = randomLightPos - ray.intersection.point;
             shadowDir.normalize();
             Point3D shadow_origin = ray.intersection.point + ERR * shadowDir;
-            Ray3D shadow_ray(shadow_origin,shadowDir);
+            Ray3D shadow_ray(shadow_origin, shadowDir);
 
             traverseScene(scene, shadow_ray);
 
-            if(shadow_ray.intersection.none){
+            if (shadow_ray.intersection.none) {
                 light->shade(ray);
-                // col = col + ray.col;
                 rays_blocked++;
             }
         }
     }
-    ray.col = (1.0/(num_rays * light_list.size())) * rays_blocked * ray.col;
+    ray.col = (1.0 / (num_rays * light_list.size())) * rays_blocked * ray.col;
 }
 
 Color Raytracer::shadeRay(Ray3D &ray, Scene &scene, LightList &light_list, int num_reflect) {
@@ -123,16 +110,16 @@ Color Raytracer::shadeRay(Ray3D &ray, Scene &scene, LightList &light_list, int n
 
     // Don't bother shading if the ray didn't hit
     // anything.
-    // if (!ray.intersection.none && (ray.intersection.mat->has_texture)) {
-    //     col = textureColor(ray);
-    //     return col;
-    // }
+    if (!ray.intersection.none && (ray.intersection.mat->has_texture)) {
+        col = textureColor(ray);
+        return col;
+    }
 
     if (!ray.intersection.none) {
         // computeShading(ray, light_list, scene);
         computeShadingSoft(ray, light_list, scene);
-        col = ray.col;
-        // col = col + ray.intersection.mat->transparency * ray.col;
+        // col = ray.col;
+        col = col + ray.intersection.mat->transparency * ray.col;
     }
 
     // You'll want to call shadeRay recursively (with a different ray,
@@ -144,6 +131,7 @@ Color Raytracer::shadeRay(Ray3D &ray, Scene &scene, LightList &light_list, int n
         Intersection intersect = ray.intersection;
         Vector3D normal = intersect.normal;
         Vector3D light_ray = -ray.dir;
+        // Compute reflection vector
         Vector3D reflect_dir = 2.0 * normal.dot(light_ray) * normal - light_ray;
         reflect_dir.normalize();
         Point3D reflect_origin = intersect.point + ERR * normal;
@@ -151,49 +139,54 @@ Color Raytracer::shadeRay(Ray3D &ray, Scene &scene, LightList &light_list, int n
         // Our new reflected ray
         Ray3D reflect_ray(reflect_origin, reflect_dir);
 
-        // Glossy reflection from tutorial
+        // Glossy implementation reflection from tutorial
         if (intersect.mat->glossy) {
-            int n = 10;
             double roughness = intersect.mat->roughness;
-            
-            // for (size_t i = 0; i < n; ++i) {
-            //     Vector3D u = reflect_dir.cross(normal);
-            //     u.normalize();
-            //     Vector3D v = reflect_dir.cross(u);
-            //     v.normalize();
-            //     double theta = 2 * M_PI * ((myrand() * roughness));
-            //     double phi = 2 * M_PI * ((myrand() * roughness));
-            //     double x = sin(theta) * cos(phi);
-            //     double y = sin(theta) * sin(phi);
-            //     double z = cos(theta);
 
-            //     reflect_dir = x * u + y * v + z * reflect_dir;
-            //     reflect_dir.normalize();
-            //     reflect_origin = intersect.point + ERR * reflect_dir;
-            //     reflect_ray.dir = reflect_dir;
-            //     reflect_ray.origin = reflect_origin;
-            //     reflect_color = reflect_color + (1.0 / n) * shadeRay(reflect_ray, scene,light_list, num_reflect+1);
-            // }
+            int n = 10;
+            for (size_t i = 0; i < n; ++i) {
+                // Orthogonal basis at intersection point
+                Vector3D u = reflect_dir.cross(normal);
+                u.normalize();
+                Vector3D v = reflect_dir.cross(u);
+                v.normalize();
+                
+                // Uniformly sample random directions and send the ray in
+                double theta = 2 * M_PI * ((myrand() * roughness));
+                double phi = 2 * M_PI * ((myrand() * roughness));
+                double x = sin(theta) * cos(phi);
+                double y = sin(theta) * sin(phi);
+                double z = cos(theta);
 
+                // Convert sample to world using orthogonal basis
+                reflect_dir = x * u + y * v + z * reflect_dir;
+                reflect_dir.normalize();
+                reflect_origin = intersect.point + ERR * reflect_dir;
+                reflect_ray.dir = reflect_dir;
+                reflect_ray.origin = reflect_origin;
+                reflect_color =
+                    reflect_color +
+                    (1.0 / (2*n)) * shadeRay(reflect_ray, scene, light_list, num_reflect+1);
+            }
 
-            Vector3D u = reflect_dir.cross(normal);
-            u.normalize();
-            Vector3D v = reflect_dir.cross(u);
-            v.normalize();
-            double theta = 2 * M_PI * ((myrand() * roughness));
-            double phi = 2 * M_PI * ((myrand() * roughness));
-            double x = sin(theta) * cos(phi);
-            double y = sin(theta) * sin(phi);
-            double z = cos(theta);
+            // Vector3D u = reflect_dir.cross(normal);
+            // u.normalize();
+            // Vector3D v = reflect_dir.cross(u);
+            // v.normalize();
+            // double theta = 2 * M_PI * ((myrand() * roughness));
+            // double phi = 2 * M_PI * ((myrand() * roughness));
+            // double x = sin(theta) * cos(phi);
+            // double y = sin(theta) * sin(phi);
+            // double z = cos(theta);
 
-            reflect_dir = x * u + y * v + z * reflect_dir;
-            reflect_dir.normalize();
-            reflect_origin = intersect.point + ERR * normal;
-            reflect_ray.dir = reflect_dir;
-            reflect_ray.origin = reflect_origin;
-            reflect_color = reflect_color + shadeRay(reflect_ray, scene, light_list, num_reflect + 1);
+            // reflect_dir = x * u + y * v + z * reflect_dir;
+            // reflect_dir.normalize();
+            // reflect_origin = intersect.point + ERR * normal;
+            // reflect_ray.dir = reflect_dir;
+            // reflect_ray.origin = reflect_origin;
+            // reflect_color = reflect_color + shadeRay(reflect_ray, scene, light_list, num_reflect + 1);
         } else {
-            // Prevent infinite recursion
+            // Prevent infinite recursion by +1 to num_reflect
             reflect_color = shadeRay(reflect_ray, scene, light_list, num_reflect + 1);
         }
 

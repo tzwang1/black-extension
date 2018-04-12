@@ -65,24 +65,20 @@ typedef std::vector<SceneNode *> Scene;
 // the xy-plane.
 class UnitSquare : public SceneObject {
   public:
-    bool intersect(Ray3D &ray, const Matrix4x4 &worldToModel,
-                   const Matrix4x4 &modelToWorld);
+    bool intersect(Ray3D &ray, const Matrix4x4 &worldToModel, const Matrix4x4 &modelToWorld);
 };
 
 class UnitCube : public SceneObject {
-    public:
-     bool intersect(Ray3D &ray, const Matrix4x4 &worldToModel,
-                   const Matrix4x4 &modelToWorld);
+  public:
+    bool intersect(Ray3D &ray, const Matrix4x4 &worldToModel, const Matrix4x4 &modelToWorld);
 };
 
 class UnitSphere : public SceneObject {
   public:
-    bool intersect(Ray3D &ray, const Matrix4x4 &worldToModel,
-                   const Matrix4x4 &modelToWorld);
+    bool intersect(Ray3D &ray, const Matrix4x4 &worldToModel, const Matrix4x4 &modelToWorld);
 };
 
 class UnitCylinder : public SceneObject {
   public:
-    bool intersect(Ray3D &ray, const Matrix4x4 &worldToModel,
-                   const Matrix4x4 &modelToWorld);
+    bool intersect(Ray3D &ray, const Matrix4x4 &worldToModel, const Matrix4x4 &modelToWorld);
 };

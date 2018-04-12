@@ -173,7 +173,7 @@ void renderNonTexturedScene(int width, int height){
     chrome_sphere->scale(Point3D(0, 0, 0), factor1);
     chrome_sphere->mat->reflective = true;
     chrome_sphere->mat->glossy = true;
-    chrome_sphere->mat->roughness = 0.2;
+    chrome_sphere->mat->roughness = 0.4;
     
     // Apply some transformations to the gold cylinder
     copper_cylinder->translate(Vector3D(-2, -2, -6));
