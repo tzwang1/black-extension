@@ -4,9 +4,6 @@
 
     Implements scene_object.h
 
-    Equations for primitives taken from
-    https://www.cl.cam.ac.uk/teaching/1999/AGraphHCI/SMAG/node2.html#SECTION00023200000000000000
-
 ***********************************************************/
 
 #include "scene_object.h"
@@ -323,7 +320,7 @@ bool UnitCylinder::intersect(Ray3D &ray, const Matrix4x4 &worldToModel,
             return false;
         }
 
-        // Compute the two roots and decide which one to keep as t
+        // Compute the two roots and decide which one to keep as the true intersection value
         x1 = (-b + sqrt(d)) / a;
         x2 = (-b - sqrt(d)) / a;
 

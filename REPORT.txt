@@ -1,15 +1,58 @@
+# CSC418 A3
+Name, Student #: Aobo Cui, 998506594
+Name, Student #: Truman Wang, 1000466202
+
+# Introduction
 We implemented anti-aliasing, depth of field, texture mapping, soft shadows, 
 and handling a non-trivial compound object (cylinder).
 
+# Results
+Features are broken up into individual images named after the feature they represent. 
+For example, soft_shadows.bmp demonstrates the soft shadows feature.
+
+# Basic shading and shadows
+We implemented both hard and soft shadows. Hard shadows is implemented in Raytracer::computeShading,
+while soft shadows is implementated in Raytracer::computeShadingSoft
+
+# Texture mapping
 Our main.cpp is separated into two functions, renderTexturedScene, which will render texture mapped images
 objects (plane, sphere, cube), and renderNonTexturedScene, which will render the other part 2 features,
 (Depth of field, anti-aliasing, softshadows, cylinder).
 
+# Texture mapping
 For texture mapping we added char pointers to the material struct to store the red, green, and blue values
 of bitmaps we read in. We then map the coordinates in the bitmap to the object using U, V coordinates
 that were specified in our object intersection code.
 
+# Anti-aliasing
 For anti-aliasing we split each pixel into a 5x5 grid and then shot a ray to a random point in each grid
 then averaged the sum of all the values to get the pixel color.
 
-For depth of field 
+# DOF
+For depth of field we computed secondary rays based on the tutorial slides helper code. This essentially
+simulates depth of field by randomly sampling within the aperture everytime a pixel is shaded.
+
+# Non-trivial primitive shapes
+Additional primitive scene objects in scene_object.cpp include sphere, cynlinder, and cube.
+The equations, geometry, and implementation are inspired by:
+https://www.cl.cam.ac.uk/teaching/1999/AGraphHCI/SMAG/node2.html#SECTION00023200000000000000
+
+# Glossy reflection
+We also implemented glossy reflection, using jitters and the code supplied in the tutorial slides.
+First we constructed an orthogonal basis at intersection point, then sample from a hemisphere constrained
+based on the roughness of a material, and finally me transform the sample to the world space using the orthogonal basis.
+
+# Soft shadows
+We implemented soft shadows using distributed ray-tracing and random oversampling (method 2 from tutorial).
+We used a point light source to approximate a sphere, and for each intersection point, we randomly sample a point
+on that sphere as the position of the light.
+
+# Credits
+Part1: Truman
+Part2:
+    - Recursive ray tracing and hard shadows: Aobo
+    - Anti-aliasing: Truman
+    - Depth of field: Aobo
+    - Soft shadows: Truman
+    - Texture mapping: Truman
+    - Handling of cynlinder: Aobo
