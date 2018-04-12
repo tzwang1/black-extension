@@ -147,8 +147,8 @@ void renderNonTexturedScene(int width, int height){
     scene.push_back(chrome_sphere);
 
     // // Add a cylinder
-    // SceneNode *copper_cylinder = new SceneNode(new UnitCylinder(), &copper);
-    // scene.push_back(copper_cylinder);
+    SceneNode *copper_cylinder = new SceneNode(new UnitCylinder(), &copper);
+    scene.push_back(copper_cylinder);
 
     // SceneNode *wall1 = new SceneNode(new UnitSquare(), &jade);
     // scene.push_back(wall1);
@@ -158,11 +158,8 @@ void renderNonTexturedScene(int width, int height){
     gold_sphere->translate(Vector3D(-3, 2, -5));
     gold_sphere->rotate('x', -45);
     gold_sphere->scale(Point3D(0, 0, 0), factor1);
-    gold_sphere->mat->reflective = false;
-    gold_sphere->mat->reflective_index = 1.0;
-    gold_sphere->mat->refractive = false;
-    gold_sphere->mat->refractive_index = 1.3;
-    // gold_sphere->mat->glossy = true;
+    gold_sphere->mat->reflective = true;
+    gold_sphere->mat->glossy = false;
 
     // Apply some transformations to the floor
     double factor2[3] = {10.0, 10.0, 10.0};
@@ -174,19 +171,16 @@ void renderNonTexturedScene(int width, int height){
     double factor3[3] = {2.0, 2.0, 2.0};
     chrome_sphere->translate(Vector3D(1, 0, -6));
     chrome_sphere->scale(Point3D(0, 0, 0), factor1);
-    chrome_sphere->mat->reflective = false;
-    chrome_sphere->mat->reflective_index = 1.0;
-    chrome_sphere->mat->refractive = true;
-    chrome_sphere->mat->refractive_index = 1.3;
-    // chrome_sphere->mat->glossy = true;
-    chrome_sphere->mat->transparency = 0.5;
+    chrome_sphere->mat->reflective = true;
+    chrome_sphere->mat->glossy = true;
+    chrome_sphere->mat->roughness = 0.2;
     
     // Apply some transformations to the gold cylinder
-    // double factor5[3] = {0.8, 0.8, 4.0};
-    // copper_cylinder->translate(Vector3D(-2, -2, -6));
-    // copper_cylinder->mat->reflective = false;
-    // copper_cylinder->mat->glossy = false;
-    // copper_cylinder->scale(Point3D(0, 0, 0), factor5);
+    copper_cylinder->translate(Vector3D(-2, -2, -6));
+    copper_cylinder->mat->reflective = true;
+    copper_cylinder->mat->glossy = true;
+    copper_cylinder->mat->roughness = 0.4;
+    copper_cylinder->scale(Point3D(0, 0, 0), factor1);
 
     // Apply some transformations to the wall
     // double factor4[3] = {5.0, 5.0, 5.0};

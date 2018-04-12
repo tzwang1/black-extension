@@ -2,13 +2,8 @@
 Assignment 3 Checklist/Grading sheet
 -------------------------------------
 
-<<<<<<< HEAD
-Name: Truman Wang
-Student ID: 1000466202
-=======
 Name:
 Student ID:
->>>>>>> 8279acbe76797e8a456089be62e8242765d91ac8
 
 -----------------------------------------------------------------------------------------
 A. PLEASE ANSWER THE FOLLOWING QUESTIONS (your assignment will not be graded otherwise!)

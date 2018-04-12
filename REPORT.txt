@@ -9,4 +9,7 @@ For texture mapping we added char pointers to the material struct to store the r
 of bitmaps we read in. We then map the coordinates in the bitmap to the object using U, V coordinates
 that were specified in our object intersection code.
 
-For anti-aliasing we split each pixel into 25 
+For anti-aliasing we split each pixel into a 5x5 grid and then shot a ray to a random point in each grid
+then averaged the sum of all the values to get the pixel color.
+
+For depth of field 
